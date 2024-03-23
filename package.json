@@ -1,0 +1,20 @@
+{
+  "name": "com.nightrider.niceattributes",
+  "displayName": "NiceAttributes",
+  "description": "NiceAttributes, a Unity plugin which extends Inspector with simple attributes. Based on NaughtyAttributes, but with complete rewrite of the core functionality.",
+  "version": "0.9.0",
+  "unity": "2018.4",
+  "licence": "MIT",
+  "licensesUrl": "https://github.com/vedran-/NiceAttributes/blob/main/LICENSE",
+  "keywords": [ "attribute", "inspector", "editor", "group", "Unity" ],
+  "category": "editor extensions",
+  "dependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/vedran-/NiceAttributes.git"
+  },  
+  "author": {
+    "name": "Night Rider",
+    "url": "https://github.com/vedran-"
+  }
+}

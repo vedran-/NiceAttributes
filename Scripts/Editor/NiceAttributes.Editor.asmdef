@@ -1,0 +1,16 @@
+{
+    "name": "NiceAttributes.Editor",
+    "references": [
+        "NiceAttributes.Core"
+    ],
+    "optionalUnityReferences": [],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": []
+}

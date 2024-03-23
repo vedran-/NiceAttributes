@@ -1,0 +1,395 @@
+using System;
+using System.Runtime.CompilerServices;
+using System.Text.RegularExpressions;
+using UnityEngine;
+using System.Collections.Generic;
+using System.Linq;
+#if UNITY_EDITOR
+    using UnityEditor;
+#endif
+
+namespace NiceAttributes
+{
+    #region class ShowAttribute
+    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class | AttributeTargets.Struct )]
+    public class ShowAttribute : MetaAttribute
+    {
+        public ShowAttribute( [CallerLineNumber] int lineNumber = 0 ) : base( lineNumber ) { }
+    }
+    #endregion class ShowAttribute
+
+    #region class HideAttribute
+    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Class | AttributeTargets.Struct )]
+    public class HideAttribute : MetaAttribute
+    {
+        public HideAttribute( [CallerLineNumber] int lineNumber = 0 ) : base( lineNumber ) { }
+    }
+    #endregion class HideAttribute
+
+    #region class HorizontalGroupAttribute
+    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method, AllowMultiple = true )]
+    public class HorizontalGroupAttribute : BaseGroupAttribute
+    {
+        public HorizontalGroupAttribute( string groupName = "", [CallerLineNumber] int lineNumber = 0 ) 
+            : base( groupName, lineNumber ) {}
+
+#if UNITY_EDITOR
+        int lastItemsDrawn = 0, lastStartId;
+
+        public override bool OnGUI_GroupStart( string label )
+        {
+            var rect = EditorGUILayout.BeginHorizontal();
+
+            // Fill the background, if set
+            if( BackColor != DefaultColor ) DrawingUtil.FillRect( rect, BackColor.ToColor() );
+
+            lastStartId = GUIUtility.GetControlID( FocusType.Passive );
+
+            // Try to automatically calculate label and field width, so it fits visible space
+            if( lastItemsDrawn > 0 && (LabelWidth == 0 || FieldWidth == 0) )
+            {
+                var w = (EditorGUIUtility.currentViewWidth / lastItemsDrawn) / 2;
+                if( LabelWidth == 0 ) LabelWidth = w;
+                if( FieldWidth == 0 ) FieldWidth = w;
+                //Log.Info( $"w: {w:0.#}; sW: {EditorGUIUtility.currentViewWidth:0.#}; rW: {rect.width:0.#}, items: {lastItemsDrawn}" );
+            }
+
+            SetLabelAndFieldWidth();
+
+
+            // Show the label
+            if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, true, this );
+            return true;
+        }
+
+        public override void OnGUI_GroupEnd()
+        {
+            // Calculate number of items drawn by using ControlID - it increases with each control drawn
+            lastItemsDrawn = GUIUtility.GetControlID( FocusType.Passive ) - lastStartId;
+
+            RestoreLabelAndFieldWidth();
+            EditorGUILayout.EndHorizontal();
+        }
+#endif
+    }
+    #endregion class HorizontalGroupAttribute
+
+    #region class VerticalGroupAttribute
+    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method, AllowMultiple = true )]
+    public class VerticalGroupAttribute : BaseGroupAttribute
+    {
+        public VerticalGroupAttribute( string groupName = "", [CallerLineNumber] int lineNumber = 0 ) 
+            : base( groupName, lineNumber ) {}
+
+#if UNITY_EDITOR
+        public override bool OnGUI_GroupStart( string label )
+        {
+            var rect = EditorGUILayout.BeginVertical();
+            SetLabelAndFieldWidth();
+
+            // Fill the background, if set
+            if( BackColor != DefaultColor ) DrawingUtil.FillRect( rect, BackColor.ToColor() );
+
+
+            if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
+            return true;
+        }
+
+        public override void OnGUI_GroupEnd()
+        {
+            RestoreLabelAndFieldWidth();
+            EditorGUILayout.EndVertical();
+        }
+#endif
+    }
+    #endregion class VerticalGroupAttribute
+
+
+    #region class TabGroupAttribute
+    [AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method, AllowMultiple = true )]
+    public class TabGroupAttribute : BaseGroupAttribute
+    {
+        public TabGroupAttribute( string groupName = "", [CallerLineNumber] int lineNumber = 0 ) 
+            : base( groupName, lineNumber ) {}
+
+#if UNITY_EDITOR
+        public class TabParent
+        {
+            public List<TabGroupAttribute>  tabGroups = null;
+            public string[]                 tabHeader = null;
+            public int                      selectedTabIdx = 0;
+        }
+
+        public TabParent tabParent = null;
+        bool IsSelectedTab => GetSelectedTab() == this;
+        Rect tabRect;
+
+        #region GetSelectedTabIdx()
+        int GetSelectedTabIdx()
+        {
+            if( tabParent == null || tabParent.tabGroups == null || tabParent.tabGroups.Count == 0 ) return -1;
+            if( tabParent.selectedTabIdx >= tabParent.tabGroups.Count ) tabParent.selectedTabIdx = tabParent.tabGroups.Count - 1;
+            if( tabParent.selectedTabIdx < 0 ) tabParent.selectedTabIdx = 0;
+            return tabParent.selectedTabIdx;
+        }
+        #endregion GetSelectedTabIdx()
+        #region GetSelectedTab()
+        TabGroupAttribute GetSelectedTab()
+        {
+            var idx = GetSelectedTabIdx();
+            return idx >= 0 ? tabParent.tabGroups[idx] : null;
+        }
+        #endregion GetSelectedTab()
+
+
+        #region OnGUI_GroupStart()
+        public override bool OnGUI_GroupStart( string label )
+        {
+            // Draw tab group only when selected in parent
+            if( !IsSelectedTab ) return false;
+
+            // Draw Tab Header
+            tabRect = EditorGUILayout.BeginVertical();
+
+            // Fill the background, if set
+            if( BackColor != DefaultColor ) DrawingUtil.FillRect( tabRect, BackColor.ToColor() );
+
+            DrawingUtil.DrawTabHeader( tabParent );
+
+            // Draw client area
+            var rect = EditorGUILayout.BeginVertical();
+
+
+            SetLabelAndFieldWidth();
+
+            return true;
+        }
+        #endregion OnGUI_GroupStart()
+
+        #region OnGUI_GroupEnd()
+        public override void OnGUI_GroupEnd()
+        {
+            // Calculate number of items drawn by using ControlID - it increases with each control drawn
+            //lastItemsDrawn = GUIUtility.GetControlID( FocusType.Passive ) - lastStartId;
+
+            RestoreLabelAndFieldWidth();
+            EditorGUILayout.EndVertical();
+            GUILayout.Space( 3 );
+            EditorGUILayout.EndVertical();
+
+            DrawingUtil.DrawRect( tabRect, Color.black, 2 );
+        }
+        #endregion OnGUI_GroupEnd()
+#endif
+    }
+    #endregion class TabGroupAttribute
+
+
+
+    public static class Util
+    {
+        #region [uint] ToColor()
+        public static Color ToColor( this uint val )
+        {
+            return new Color32( (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)((val >> 0) & 0xFF) );
+        }
+        #endregion ToColor()
+
+        #region [Color] WithAlpha()
+        public static Color WithAlpha( this Color color, float alpha )
+        {
+            color.a = alpha;
+            return color;
+        }
+        #endregion WithAlpha()
+
+        #region [Rect] Grow()
+        public static Rect Grow( this Rect rect, float left, float right, float top, float bottom )
+        {
+            rect.x -= left;
+            rect.y -= top;
+            rect.width += left + right;
+            rect.height += top + bottom;
+            return rect;
+        }
+        #endregion Grow()
+    }
+
+    public static class DrawingUtil
+    {
+        #region GetDefaultBackgroundColor()
+#if UNITY_EDITOR
+        readonly static Color bgProSkin = new Color32(56, 56, 56, 255), bgPoorSkin = new Color32(194, 194, 194, 255);
+        public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? bgProSkin : bgPoorSkin;
+#endif
+        #endregion GetDefaultBackgroundColor()
+
+        #region [Line] DrawHorizontalLine()
+        public static void DrawHorizontalLine( float x, float y, float width, Color color, float thickness = 1 ) => FillRect( new Rect( x, y-thickness/2f, width, thickness ), color );
+        #endregion DrawHorizontalLine()
+        #region [Line] DrawVerticalLine()
+        public static void DrawVerticalLine( float x, float y, float height, Color color, float thickness = 1 ) => FillRect( new Rect( x - thickness / 2f, y, thickness, height ), color );
+        #endregion DrawVerticalLine()
+
+        #region [Rect] DrawRect()
+        public static void DrawRect( Rect rect, Color color, float thickness = 1f )
+        {
+            DrawHorizontalLine( rect.x, rect.yMin, rect.width, color, thickness );
+            DrawHorizontalLine( rect.x, rect.yMax, rect.width, color, thickness );
+            DrawVerticalLine( rect.xMin, rect.y, rect.height, color, thickness );
+            DrawVerticalLine( rect.xMax, rect.y, rect.height, color, thickness );
+        }
+        #endregion DrawRect()
+        #region [Rect] FillRect()
+        private static Texture2D drawRectBackgroundTexture = null;
+        public static GUIStyle drawRectTextureStyle = null;
+        public static void FillRect( Rect rect, Color color, GUIContent content = null )
+        {
+            if( drawRectBackgroundTexture == null ) drawRectBackgroundTexture = Texture2D.whiteTexture;
+            if( drawRectTextureStyle == null ) drawRectTextureStyle = new GUIStyle { normal = new GUIStyleState { background = drawRectBackgroundTexture } };
+
+            var backgroundColor = GUI.backgroundColor;
+            GUI.backgroundColor = color;
+            GUI.Box( rect, content ?? GUIContent.none, drawRectTextureStyle );
+            GUI.backgroundColor = backgroundColor;
+        }
+        #endregion FillRect()
+
+
+
+        #region [Label] DrawLabel() - draws with shadow too
+        public static void DrawLabel( Rect rect, string text, GUIStyle guiStyle, Color textColor, Color? shadowColor, Action<string> setCellValue = null )
+        {
+            var origContentColor = GUI.contentColor;
+
+            // If we can set value of the cell - show TextField so user can edit the value
+            if( setCellValue != null )
+            {
+                var origColor = GUI.color;
+                GUI.color = textColor;                
+                var newText = GUI.TextField( rect, text, guiStyle );
+                if( newText != text ) setCellValue( newText );
+                GUI.contentColor = origContentColor;
+                GUI.color = origColor;
+
+                // Draw small gray rectangle, so user will know that this field is editable
+                rect.xMin--; rect.yMin--; rect.xMax++; rect.yMax++;
+                //rect.width = rect.height = 2;
+                DrawRect( rect, Color.gray );
+                return;
+            }
+
+            if( shadowColor.HasValue )
+            {
+                // Draw shadow
+                var rTxt = rect;
+                rect.x += 1f; rect.y += 0.5f;
+                GUI.contentColor = shadowColor.Value;
+                GUI.Label( rect, RemoveColorRichTextTags(text), guiStyle );
+                // Draw text
+                GUI.contentColor = textColor;
+                GUI.Label( rTxt, text, guiStyle );
+            } else {
+                // Draw normal text
+                GUI.contentColor = textColor;
+                GUI.Label( rect, text, guiStyle );
+            }
+
+            GUI.contentColor = origContentColor;
+        }
+        #endregion DrawLabel()
+
+        #region [Window GUI] GetRectToFillWindow()
+        /// <summary>
+        /// Gets size of Rect, which would fill all available window space, to bottom of window.
+        /// It uses a trick - ScrollView always fills window
+        /// </summary>
+        /// <param name="minHeight"></param>
+        /// <returns></returns>
+        public static Rect GetRectToFillWindow( float minHeight )
+        {
+            var wasEnabled = GUI.enabled;
+            GUI.enabled = false;
+            var lastRect = GUILayoutUtility.GetLastRect();
+            var startPosY = lastRect.yMax;
+            var scrollPosition = Vector2.zero;
+
+            // Create ScrollView
+            GUILayout.BeginScrollView( scrollPosition, GUIStyle.none, GUIStyle.none );
+            // Fill scroller to max height
+            GUILayoutUtility.GetRect( lastRect.width, minHeight );
+            GUILayout.EndScrollView();
+
+            // Now get rect with height=0, and we'll use its position to know where is bottom of the screen
+            var rect = GUILayoutUtility.GetRect( lastRect.width, 0 );
+            rect.yMin = startPosY;
+            GUI.enabled = wasEnabled;
+            return rect;
+        }
+        #endregion GetRectToFillWindow()
+
+        public static string RemoveColorRichTextTags( string str ) => Regex.Replace( str, @"\<(\/)?color(=""?#?\w+""?)?\>", "" );
+
+
+
+#if UNITY_EDITOR
+        #region [Rect-Editor only] DrawCheckeredRect()
+#if UNITY_EDITOR
+        public static void DrawCheckeredRect( Rect rect, float xSize = 10, float ySize = 10, Color? color = null, float colorFactorTowardsWhite = 0.5f )
+        {
+            Color col1 = color ?? Color.gray;
+            Color col2 = Color.Lerp( col1, Color.white, colorFactorTowardsWhite ).WithAlpha( col1.a );
+            EditorGUI.DrawRect( rect, col1 );
+
+            for( int y = 0; y < rect.height / ySize; y++ )
+            {
+                for( int x = 0; x < rect.width / xSize; x++ )
+                {
+                    if( ((x ^ y) & 1) != 0 ) continue;
+                    var r = new Rect( rect.xMin + x * xSize, rect.yMin + y * ySize, xSize, ySize );
+                    if( r.xMax > rect.xMax ) r.xMax = rect.xMax;
+                    if( r.yMax > rect.yMax ) r.yMax = rect.yMax;
+                    EditorGUI.DrawRect( r, col2 );
+                }
+            }
+        }
+#endif
+        #endregion DrawCheckeredRect()
+
+        #region [Editor only] DrawHeader()
+        readonly static Color headerBgColor = new Color32( 3, 45, 53, 255 );
+        public static void DrawHeader( string label, bool fitWidth = false, BaseGroupAttribute groupAttr = null )
+        {
+            var size = EditorStyles.boldLabel.CalcSize( new GUIContent( label ) );
+
+            var rect = fitWidth 
+                ? EditorGUILayout.GetControlRect( GUILayout.MaxWidth( size.x ), GUILayout.MaxHeight( size.y ) )
+                : EditorGUILayout.GetControlRect( GUILayout.MaxHeight( size.y ) );
+            var bgRect = fitWidth ? rect.Grow( 3, 3, 3, 3 ) : rect.Grow( 3, 3, 3, 0 );
+            var bgCol = groupAttr?.LabelBackColor == BaseGroupAttribute.DefaultColor ? headerBgColor : groupAttr.LabelBackColor.ToColor();
+            FillRect( bgRect, bgCol );
+
+            if( !fitWidth ) rect.y -= 2;
+            var fgCol = groupAttr?.LabelColor == BaseGroupAttribute.DefaultColor ? Color.white : groupAttr.LabelColor.ToColor();
+            var shadowCol = groupAttr?.LabelShadowColor == BaseGroupAttribute.DefaultColor ? Color.gray : groupAttr.LabelShadowColor.ToColor();
+            DrawLabel( rect, label, EditorStyles.boldLabel, fgCol, shadowCol );
+        }
+        #endregion DrawHeader()
+
+        #region DrawTabHeader()
+        public static void DrawTabHeader( TabGroupAttribute.TabParent tabParent )
+        {
+            // Check/create Tab header
+            if( tabParent.tabHeader == null ) tabParent.tabHeader = tabParent.tabGroups.Select( tg => tg.GroupName ).ToArray();
+
+            var newIdx = GUILayout.Toolbar( tabParent.selectedTabIdx, tabParent.tabHeader );
+            if( newIdx != tabParent.selectedTabIdx )
+            {
+                tabParent.selectedTabIdx = newIdx;
+                EditorGUIUtility.editingTextField = false;
+            }
+        }
+        #endregion DrawTabHeader()
+#endif
+    }
+}
