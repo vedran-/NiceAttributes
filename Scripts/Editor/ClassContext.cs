@@ -9,10 +9,12 @@ namespace NiceAttributes.Editor
 {
     public class ClassContext
     {
-        public List<ClassItem>      members = new();
-        public bool                 hasNiceAttributes = false;
-        private object              targetObject;
-        private int                 indentLevel;
+        public bool             HasNiceAttributes { get; private set; } = false;
+
+        private List<ClassItem> members = new();
+        private object          targetObject;
+        private int             indentLevel;
+
 
         #region class ClassItem
         public class ClassItem
@@ -26,7 +28,7 @@ namespace NiceAttributes.Editor
             public string               errorMessage = null;    // Used to display warnings/errors to user
             public bool                 foldedOut = true;       // For non-serialized members, we have to track if they're folded
 
-            // If member is class or struct, it can have its own context for displaying its children
+            // If member is a class or struct, it can have its own context for displaying its children
             public ClassContext         classContext = null;
         }
         #endregion class ClassItem
@@ -56,7 +58,7 @@ namespace NiceAttributes.Editor
         #region [API] CreateContext()
         /// <summary>
         /// Get all members of the class and all its base classes.
-        /// It also recursively can visit subclasses/substructs
+        /// It also recursively visits subclasses/substructs
         /// </summary>
         /// <param name="type">Type to return all members for</param>
         public static ClassContext CreateContext( Type classType, object targetObject, int indentLevel )
@@ -72,7 +74,7 @@ namespace NiceAttributes.Editor
             //Log.Info( $"All members {ctx.hasNiceAttributes} for {classType.Name}:\n - " + string.Join( "\n - ", ctx.members.Select( m => $"{m.memberInfo} - {m.memberInfo.GetInterfaceAttributes<INiceAttribute>().FirstOrDefault()?.LineNumber} >> [{ string.Join( ", ", m.niceAttributes.Select( a => a.GetType() ) )}]" ) ) );
 
             // If class (or its subclasses) don't have any INiceAttribute, stop further processing - we'll use default inspector instead of our anyhow
-            if( !ctx.hasNiceAttributes ) return ctx;
+            if( !ctx.HasNiceAttributes ) return ctx;
 
             // Order class members, as they appear in the source code file
             var orderedMembers = ctx.GetOrderedMembersByLineNumber();
@@ -91,7 +93,7 @@ namespace NiceAttributes.Editor
         {
             if( Attribute.IsDefined( mt, typeof( HideAttribute ) ) )
             {
-                hasNiceAttributes = true;
+                HasNiceAttributes = true;
                 return false;
             }
 
@@ -130,7 +132,7 @@ namespace NiceAttributes.Editor
         readonly static Type[] SkipTypes = new Type[] { typeof(UnityEngine.Object), typeof(ScriptableObject), typeof(MonoBehaviour) };
         void GetAllMembers( Type classType )
         {
-            // Add all base types to a list - we need their members too!
+            // Add all base types to a list - we need their members too, we inherited them!
             var types = new List<Type>() { classType };
             while( types.Last().BaseType != null )
             {
@@ -146,7 +148,10 @@ namespace NiceAttributes.Editor
                     niceAttributes = member.GetInterfaceAttributes<INiceAttribute>().ToArray(),
                     classContext = memberClassContext
                 };
-                if( n.niceAttributes.Length > 0 ) hasNiceAttributes = true;
+                if( n.niceAttributes.Length > 0 )
+                {
+                    HasNiceAttributes = true;
+                }
 
                 // Get line number in source code from INiceAttribute
                 n.lineNumber = n.niceAttributes.Length > 0 ? n.niceAttributes[0].LineNumber : -1f;
@@ -183,7 +188,7 @@ namespace NiceAttributes.Editor
                         {
                             // Class or Struct has [Hide] attribute - so don't show this whole field at all
                             if( Attribute.IsDefined( memberType, typeof( HideAttribute ) ) ) {
-                                hasNiceAttributes = true;
+                                HasNiceAttributes = true;
                                 continue;
                             }
 
@@ -203,7 +208,7 @@ namespace NiceAttributes.Editor
                                 memberClassContext = CreateContext( memberType, obj, indentLevel + 1 );
 
                                 // If sub-class has any Nice attributes, then mark that we have nice attributes
-                                if( memberClassContext.hasNiceAttributes ) hasNiceAttributes = true;
+                                if( memberClassContext.HasNiceAttributes ) HasNiceAttributes = true;
                             }
                         }
                     }
@@ -544,8 +549,6 @@ namespace NiceAttributes.Editor
         static Color bgNonSerialized = Color.Lerp( DrawingUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f );
         private void DrawItem( ClassItem item )
         {
-            //var bgNonSerialized = Color.Lerp( GUI.skin.window.normal.background.GetPixel( 0, 0 ), Color.red, 0.10f );
-
             var itemRect = EditorGUILayout.BeginVertical();
 
             // Non-serialized properties will have slightly reddish background
@@ -556,6 +559,7 @@ namespace NiceAttributes.Editor
             // Draw error message, if any
             if( item.errorMessage != null )
             {
+                NiceEditorGUI.HelpBox_Layout( item.errorMessage, MessageType.Error );
                 EditorGUILayout.HelpBox( item.errorMessage, MessageType.Error );
             }
 
@@ -602,10 +606,8 @@ namespace NiceAttributes.Editor
                 }
             }
 
-            //if( item.errorMessage != null ) EditorGUILayout.EndVertical();
             EditorGUILayout.EndVertical();
         }
         #endregion DrawItem()
     }
 }
-

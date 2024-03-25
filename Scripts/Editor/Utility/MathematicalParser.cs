@@ -7,9 +7,10 @@ namespace NiceAttributes.Editor
     /// Features:
     ///  - parses mathematical expressions
     ///  - supports variables and functions (if needed). Functions have () after the name, while variables don't.
-    ///  - supports adding strings to each other
+    ///  - literal strings are between ''
+    ///  - supports adding strings to each other, and numbers to strings
     ///  - supports multiple expressions separated by comma; in that case it will return a list of objects
-    ///  - supports any other object type
+    ///  - supports any other object type returned by GetVariableValue and GetFunctionValue, but it can do arthimetic only with double and string
     /// 
     /// Usage:
     ///     MathematicalParser.Evaluate( "'The result is ' + (3.5 + -4.5) / 3 + k + sin(3.1415/3)" )
@@ -101,10 +102,8 @@ namespace NiceAttributes.Editor
                     if( ch == '+' || ch == '-' ) SkipChar();
 
                     // Parse whole number
-                    ch = expression[idx];
-                    while( !IsEnd() && (char.IsDigit( ch ) || ch == '.') ) {
+                    while( !IsEnd() && (char.IsDigit( expression[idx] ) || expression[idx] == '.') ) {
                         idx++;
-                        ch = expression[idx];
                     }
 
                     return new TokenInfo( expression[startPos..idx], TokenType.Number );
@@ -140,6 +139,17 @@ namespace NiceAttributes.Editor
         #endregion Tokenize()
 
 
+        double GetDoubleValue( object obj )
+        {
+            double val = obj is float ? (float)obj
+                        : obj is double ? (double)obj
+                        : obj is int ? (int)obj
+                        : obj is long ? (long)obj
+                        : 0;
+            return val;
+        }
+
+
         #region [Math] Factor()
         private object Factor()
         {
@@ -169,7 +179,7 @@ namespace NiceAttributes.Editor
 
             // Variable or Method name
             string name = null;
-            if( token.type == TokenType.String )
+            if( token.type == TokenType.Name )
             {
                 name = token.text;
                 SkipToken();
@@ -177,6 +187,7 @@ namespace NiceAttributes.Editor
 
             // Expression in parentheses - can follow 'name', then it's a function, and not variable
             object expression = null;
+            //if( currentTokenIdx < tokens.Count && tokens[currentTokenIdx] is { text: "(", type: TokenType.Operator } )
             if( CurrentTokenType == TokenType.Operator && CurrentTokenText == "(" )
             {
                 SkipToken();
@@ -216,12 +227,12 @@ namespace NiceAttributes.Editor
                 {
                     SkipToken();
                     var right = Factor();
-                    result = (double)result * (double)right;
+                    result = GetDoubleValue(result) * GetDoubleValue(right);
                 } else if( token.text == "/" )
                 {
                     SkipToken();
                     var right = Factor();
-                    result = (double)result / (double)right;
+                    result = GetDoubleValue(result) / GetDoubleValue(right);
                 } else break;
             }
             return result;
@@ -244,13 +255,13 @@ namespace NiceAttributes.Editor
                     if( result is string || right is string ) {
                         result = result.ToString() + right.ToString();
                     } else {
-                        result = (double)result + (double)right;
+                        result = GetDoubleValue(result) + GetDoubleValue(right);
                     }
                 } else if( token.text == "-" )
                 {
                     SkipToken();
                     var right = Term();
-                    result = (double)result - (double)right;
+                    result = GetDoubleValue(result) - GetDoubleValue(right);
                 } else break;
             }
 
@@ -279,7 +290,7 @@ namespace NiceAttributes.Editor
 
 
         #region [API] Evaluate()
-        public static object Evaluate( string expression,
+        public static (object result, bool successful) Evaluate( string expression,
             GetVariableValueDelegate getVariableValue = null,
             GetFunctionValueDelegate getFunctionValue = null )
         {
@@ -291,9 +302,10 @@ namespace NiceAttributes.Editor
             try {
                 n.tokens = n.Tokenize( expression );
                 n.currentTokenIdx = 0;
-                return n.ExpressionList();
+                return (n.ExpressionList(), true);
             } catch( Exception ex ) {
-                return $"<color=red><b>ERROR</b></color>: {ex.Message}";
+                return ($"<color=red><b>ERROR</b></color>: {ex.Message}", false);
+                //return $"<color=red><b>ERROR</b></color>: {ex.Message}\n{ex.InnerException}\n{ex.StackTrace}";
             }
         }
         #endregion Evaluate()

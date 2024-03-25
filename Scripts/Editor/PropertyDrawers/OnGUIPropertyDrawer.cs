@@ -94,7 +94,6 @@ namespace NiceAttributes.Editor
             EditorGUI.BeginProperty( rect, label, property );
             
 
-
             var onGuiAttribute = attribute as OnGUIAttribute;
             var parentObject = PropertyUtility.GetTargetObjectWithProperty( property );
             //var parentObject = property.serializedObject.targetObject;

@@ -12,7 +12,7 @@ namespace NiceAttributes.Editor
         protected virtual void OnEnable()
         {
             rootClass = ClassContext.CreateContext( target.GetType(), serializedObject.targetObject, 0 );
-            if( rootClass.hasNiceAttributes ) {
+            if( rootClass.HasNiceAttributes ) {
                 ClassContext.ConnectWithSerializedProperties( rootClass, serializedObject.GetIterator() );
             }
         }
@@ -30,7 +30,7 @@ namespace NiceAttributes.Editor
         public override void OnInspectorGUI()
         {
             // If the class we need to display doesn't use NiceAttributes, then just use the default Inspector
-            if( rootClass == null || !rootClass.hasNiceAttributes )
+            if( rootClass == null || !rootClass.HasNiceAttributes )
             {
                 DrawDefaultInspector();
                 return;

@@ -45,9 +45,10 @@ namespace NiceAttributes.Editor
         #endregion DrawPropertyField_Layout()
 
         #region PropertyField_Implementation()
-        private static void PropertyField_Implementation( Rect rect, SerializedProperty property, bool includeChildren, PropertyFieldFunction propertyFieldFunction )
+        private static void PropertyField_Implementation( Rect rect, SerializedProperty property, 
+            bool includeChildren, PropertyFieldFunction propertyFieldFunction )
         {
-            SpecialCaseDrawerAttribute specialCaseAttribute = PropertyUtility.GetAttribute<SpecialCaseDrawerAttribute>(property);
+            var specialCaseAttribute = PropertyUtility.GetAttribute<SpecialCaseDrawerAttribute>(property);
             if( specialCaseAttribute != null )
             {
                 specialCaseAttribute.GetDrawer().OnGUI( rect, property );
@@ -226,29 +227,104 @@ namespace NiceAttributes.Editor
         }
         #endregion HorizontalLine()
 
-        #region HelpBox()
-        public static void HelpBox( Rect rect, string message, MessageType type, UnityEngine.Object context = null, bool logToConsole = false )
+
+        #region [HelpBox Util] CreateHelpBoxStyles()
+        static GUIStyle helpBoxTextStyle = null, helpBoxStyle = null;
+        static void CreateHelpBoxStyles( TextAnchor textAlignment = TextAnchor.MiddleLeft )
         {
-            EditorGUI.HelpBox( rect, message, type );
+            // Lazily create GUI styles
+            if( helpBoxTextStyle == null ) helpBoxTextStyle = new GUIStyle( GUI.skin.label ) {
+                richText = true,
+                wordWrap = true,
+                alignment = textAlignment,
+                padding = new RectOffset( 4, 4, 10, 10 ) // Add padding inside the text area
+            };
+            // Create a style for the box with a border
+            if( helpBoxStyle == null ) helpBoxStyle = new GUIStyle( GUI.skin.window ) {
+                padding = new RectOffset( 1, 1, 1, 1 ), // Padding for the border
+                margin = new RectOffset( 4, 4, 4, 4 )   // Margin outside the box
+            };
+        }
+        #endregion CreateHelpBoxStyles()
+
+        #region HelpBox()
+        public static void HelpBox( Rect rect, string message, MessageType messageType,
+            UnityEngine.Object context = null, bool logToConsole = false )
+        {
+#if true
+            CreateHelpBoxStyles();
+
+            // Assuming 'Rect rect' is defined and passed to this method
+            GUI.BeginGroup( rect, helpBoxStyle ); // Begin a group within the specified rectangle
+
+            // Calculate rectangles for the icon and text based on the main rect's dimensions
+            Rect iconRect = new Rect( 10, rect.height/2 - 18, 36, 36 ); // Adjust padding as needed
+
+            // Display the icon based on the messageType
+            GUIContent iconContent = null;
+            switch( messageType ) {
+                case MessageType.Info: iconContent = EditorGUIUtility.IconContent( "console.infoicon" ); break;
+                case MessageType.Warning: iconContent = EditorGUIUtility.IconContent( "console.warnicon" ); break;
+                case MessageType.Error: iconContent = EditorGUIUtility.IconContent( "console.erroricon" ); break;
+            }
+            if( iconContent != null ) {
+                GUI.Label( iconRect, iconContent ); // Draw the icon
+            }
+
+
+            Rect textRect = new Rect( 46, 0, rect.width-46, rect.height ); // Adjust size based on the icon's position and rect's width
+
+
+            // Draw the text next to the icon
+            GUI.Label( textRect, new GUIContent( message ), helpBoxTextStyle );
+            GUI.EndGroup(); // End the group
+#else
+            EditorGUI.HelpBox( rect, message, messageType );
+#endif
+            //EditorGUI.HelpBox( rect, message, messageType );
 
             if( logToConsole )
             {
-                DebugLogMessage( message, type, context );
+                DebugLogMessage( message, messageType, context );
             }
         }
         #endregion HelpBox()
 
         #region HelpBox_Layout()
-        public static void HelpBox_Layout( string message, MessageType type, UnityEngine.Object context = null, bool logToConsole = false )
+        public static void HelpBox_Layout( string message, MessageType messageType, 
+            UnityEngine.Object context = null, bool logToConsole = false )
         {
-            EditorGUILayout.HelpBox( message, type );
+            //EditorGUILayout.HelpBox( message, messageType );
 
-            if( logToConsole )
+            CreateHelpBoxStyles();
+
+            EditorGUILayout.BeginVertical( helpBoxStyle ); // Begin a vertical group with the box style to include a border
+            EditorGUILayout.BeginHorizontal(); // Begin a horizontal group to align icon and text
+
+            // Display the icon based on the messageType
+            GUIContent iconContent = null;
+            switch( messageType )
             {
-                DebugLogMessage( message, type, context );
+                case MessageType.Info: iconContent = EditorGUIUtility.IconContent( "console.infoicon" ); break;
+                case MessageType.Warning: iconContent = EditorGUIUtility.IconContent( "console.warnicon" ); break;
+                case MessageType.Error: iconContent = EditorGUIUtility.IconContent( "console.erroricon" ); break;
+            }
+            if( iconContent != null ) { // Set a fixed size for the icon
+                EditorGUILayout.LabelField( iconContent, GUILayout.Width( 36 ), GUILayout.ExpandHeight( true ) );
+            }
+
+            // Ensure the text field expands to fit the available width
+            EditorGUILayout.LabelField( new GUIContent( message ), helpBoxTextStyle, GUILayout.ExpandWidth( true ) );
+
+            EditorGUILayout.EndHorizontal(); // End the horizontal group
+            EditorGUILayout.EndVertical(); // End the vertical group (with the border)#else
+
+            if( logToConsole ) {
+                DebugLogMessage( message, messageType, context );
             }
         }
         #endregion HelpBox_Layout()
+
 
         #region Field_Layout()
         public static bool Field_Layout( object value, string label )
@@ -344,16 +420,6 @@ namespace NiceAttributes.Editor
             return indentLength;
         }
         #endregion GetIndentLength()
-
-        #region GetFormattedText()
-        public static string GetFormattedText( string text )
-        {
-            if( !text.StartsWith( "@" ) ) return text;
-
-            // Parse formula in text
-            return text;
-        }
-        #endregion GetFormattedText()
 
 
         #region DebugLogMessage()

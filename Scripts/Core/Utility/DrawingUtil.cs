@@ -221,6 +221,7 @@ namespace NiceAttributes
 #if UNITY_EDITOR
         readonly static Color bgProSkin = new Color32(56, 56, 56, 255), bgPoorSkin = new Color32(194, 194, 194, 255);
         public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? bgProSkin : bgPoorSkin;
+        //static Color bgColorToRed = Color.Lerp( GUI.skin.window.normal.background.GetPixel( 0, 0 ), Color.red, 0.10f );
 #endif
         #endregion GetDefaultBackgroundColor()
 

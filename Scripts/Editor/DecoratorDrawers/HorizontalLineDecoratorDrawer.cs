@@ -8,7 +8,7 @@ namespace NiceAttributes.Editor
     {
         public override float GetHeight()
         {
-            HorizontalLineAttribute lineAttr = (HorizontalLineAttribute)attribute;
+            var lineAttr = (HorizontalLineAttribute)attribute;
             return EditorGUIUtility.singleLineHeight + lineAttr.Height;
         }
 
@@ -16,7 +16,7 @@ namespace NiceAttributes.Editor
         {
             Rect rect = EditorGUI.IndentedRect(position);
             rect.y += EditorGUIUtility.singleLineHeight / 3.0f;
-            HorizontalLineAttribute lineAttr = (HorizontalLineAttribute)attribute;
+            var lineAttr = (HorizontalLineAttribute)attribute;
             NiceEditorGUI.HorizontalLine( rect, lineAttr.Height, lineAttr.Color.GetColor() );
         }
     }
