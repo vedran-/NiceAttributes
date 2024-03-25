@@ -2,7 +2,7 @@
 
 namespace NiceAttributes
 {
-    public class ValidatorAttribute : Attribute, INiceAttribute
+    public abstract class ValidatorAttribute : Attribute, INiceAttribute
     {
         public int LineNumber { get; set; }
 

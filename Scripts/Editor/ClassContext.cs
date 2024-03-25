@@ -28,7 +28,10 @@ namespace NiceAttributes.Editor
             public string               errorMessage = null;    // Used to display warnings/errors to user
             public bool                 foldedOut = true;       // For non-serialized members, we have to track if they're folded
 
-            // If member is a class or struct, it can have its own context for displaying its children
+            /// <summary>
+            /// If member is a class or struct, it can have its own context for displaying its children.
+            /// Othewise it will be null.
+            /// </summary>
             public ClassContext         classContext = null;
         }
         #endregion class ClassItem
@@ -73,7 +76,8 @@ namespace NiceAttributes.Editor
 
             //Log.Info( $"All members {ctx.hasNiceAttributes} for {classType.Name}:\n - " + string.Join( "\n - ", ctx.members.Select( m => $"{m.memberInfo} - {m.memberInfo.GetInterfaceAttributes<INiceAttribute>().FirstOrDefault()?.LineNumber} >> [{ string.Join( ", ", m.niceAttributes.Select( a => a.GetType() ) )}]" ) ) );
 
-            // If class (or its subclasses) don't have any INiceAttribute, stop further processing - we'll use default inspector instead of our anyhow
+            // If class (or its subclasses) don't have any INiceAttribute, stop further processing
+            // - we'll then use default inspector instead of our anyhow
             if( !ctx.HasNiceAttributes ) return ctx;
 
             // Order class members, as they appear in the source code file
