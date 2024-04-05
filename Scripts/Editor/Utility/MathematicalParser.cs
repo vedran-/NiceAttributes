@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using JetBrains.Annotations;
 
 namespace NiceAttributes.Editor
 {
@@ -10,7 +11,9 @@ namespace NiceAttributes.Editor
     ///  - literal strings are between ''
     ///  - supports adding strings to each other, and numbers to strings
     ///  - supports multiple expressions separated by comma; in that case it will return a list of objects
-    ///  - supports any other object type returned by GetVariableValue and GetFunctionValue, but it can do arthimetic only with double and string
+    ///  - supports any other object type returned by GetVariableValue and GetFunctionValue, but it can do arithmetic only with double and string
+    ///  - supports formatting of numbers with ':' operator, e.g. "'Chance: ' + 3.5:'P'" will return "Chance: 350%"
+    ///    Check https://learn.microsoft.com/en-us/dotnet/api/system.double.tostring?view=net-7.0#system-double-tostring(system-string) for formatting options.
     /// 
     /// Usage:
     ///     MathematicalParser.Evaluate( "'The result is ' + (3.5 + -4.5) / 3 + k + sin(3.1415/3)" )
@@ -38,11 +41,14 @@ namespace NiceAttributes.Editor
         /// <returns>Supported types: string, double, or List of objects</returns>
         public delegate object GetFunctionValueDelegate( string functionName, object parameters );
 
+        bool SupportForClasses = true;
+        
+        
 
         GetVariableValueDelegate GetVariableValue;
         GetFunctionValueDelegate GetFunctionValue;
 
-        enum TokenType { None = 0, String, Number, Operator, Separator, Name }
+        enum TokenType { None = 0, String, Number, Operator, Separator, Name, StringFormatting }
         #region class TokenInfo
         class TokenInfo
         {
@@ -60,8 +66,9 @@ namespace NiceAttributes.Editor
 
         List<TokenInfo> tokens = null;
         int       currentTokenIdx = 0;
-        TokenType CurrentTokenType => currentTokenIdx < tokens.Count ? tokens[currentTokenIdx].type : TokenType.None;
-        string    CurrentTokenText => currentTokenIdx < tokens.Count ? tokens[currentTokenIdx].text : "";
+        bool      IsEndOfTokens => currentTokenIdx >= tokens.Count;
+        TokenType CurrentTokenType => tokens != null && currentTokenIdx < tokens.Count ? tokens[currentTokenIdx].type : TokenType.None;
+        string    CurrentTokenText => tokens != null && currentTokenIdx < tokens.Count ? tokens[currentTokenIdx].text : "";
         void      SkipToken() { if( currentTokenIdx < tokens.Count ) currentTokenIdx++; }
 
         private MathematicalParser() {} // Use static Evaluate() instead
@@ -71,6 +78,11 @@ namespace NiceAttributes.Editor
         {
             var tokens = new List<TokenInfo>();
 
+            bool IsValidNameChar( char ch )
+                => char.IsLetterOrDigit( ch )
+                || ch == '_'
+                || (SupportForClasses && ch == '.');
+            
             int idx = 0;
             #region ParseNextToken()
             TokenInfo ParseNextToken()
@@ -84,7 +96,7 @@ namespace NiceAttributes.Editor
 
                 var ch = expression[idx];
 
-                // String
+                // Literal String
                 if( ch == '\'' )
                 {
                     SkipChar();
@@ -99,7 +111,7 @@ namespace NiceAttributes.Editor
                 if( char.IsDigit(ch) || ((ch == '+' || ch == '-') && char.IsDigit( NextChar() )) )
                 {
                     var startPos = idx;
-                    if( ch == '+' || ch == '-' ) SkipChar();
+                    if( ch is '+' or '-' ) SkipChar();
 
                     // Parse whole number
                     while( !IsEnd() && (char.IsDigit( expression[idx] ) || expression[idx] == '.') ) {
@@ -109,18 +121,20 @@ namespace NiceAttributes.Editor
                     return new TokenInfo( expression[startPos..idx], TokenType.Number );
                 }
 
-                // Name - variable or method name; can start with _
-                if( ch == '_' || char.IsLetterOrDigit( ch ) )
+                // Name - variable or method name; can start with _ or any letter
+                if( ch == '_' || char.IsLetter( ch ) )
                 {
-                    var startPos = idx;
-                    while( !IsEnd() && char.IsLetterOrDigit( expression[idx] ) ) idx++;
+                    var startPos = idx++;
+                    while( !IsEnd() && IsValidNameChar( expression[idx] ) ) idx++;
                     return new TokenInfo( expression[startPos..idx], TokenType.Name );
                 }
 
                 // Operator
                 if( "+-*/()^".Contains( ch ) ) return new TokenInfo( expression[idx++].ToString(), TokenType.Operator );
                 
-                if( ",".Contains( ch ) ) return new TokenInfo( expression[idx++].ToString(), TokenType.Separator );
+                if( ch == ',' ) return new TokenInfo( expression[idx++].ToString(), TokenType.Separator );
+                
+                if( ch == ':' ) return new TokenInfo( expression[idx++].ToString(), TokenType.StringFormatting );
 
                 throw new InvalidOperationException( $"Unexpected token char '{ch}'!" );
             }
@@ -139,21 +153,31 @@ namespace NiceAttributes.Editor
         #endregion Tokenize()
 
 
-        double GetDoubleValue( object obj )
+        #region [Util] GetDoubleValue()
+        static double GetDoubleValue( object obj )
         {
-            double val = obj is float ? (float)obj
-                        : obj is double ? (double)obj
-                        : obj is int ? (int)obj
-                        : obj is long ? (long)obj
-                        : 0;
+            double val = obj switch
+            {
+                float f => f,
+                double d => d,
+                short s => s,
+                int i => i,
+                long l => l,
+                byte b => b,
+                char c => c,
+                _ => double.NaN
+            };
+            
+            if( double.IsNaN( val ) ) throw new InvalidOperationException( $"Invalid numeric value '{obj}'" );
             return val;
         }
+        #endregion GetDoubleValue()
 
 
         #region [Math] Factor()
         private object Factor()
         {
-            if( currentTokenIdx >= tokens.Count ) return null;
+            if( IsEndOfTokens ) return null;
             var token = tokens[currentTokenIdx];
 
             // Check if we already calculated value for this Factor token
@@ -163,26 +187,26 @@ namespace NiceAttributes.Editor
                 return token.calculatedValue;
             }
 
-            // Number
-            if( token.type == TokenType.Number ) {
-                token.calculatedValue = double.Parse( token.text );
-                SkipToken();
-                return token.calculatedValue;
-            }
-
-            // String
-            if( token.type == TokenType.String ) {
-                token.calculatedValue = token.text;
-                SkipToken();
-                return token.calculatedValue;
-            }
-
-            // Variable or Method name
             string name = null;
-            if( token.type == TokenType.Name )
+            switch( token.type )
             {
-                name = token.text;
-                SkipToken();
+                // Number
+                case TokenType.Number:
+                    token.calculatedValue = double.Parse( token.text );
+                    SkipToken();
+                    return token.calculatedValue;
+                
+                // String
+                case TokenType.String:
+                    token.calculatedValue = token.text;
+                    SkipToken();
+                    return token.calculatedValue;
+                
+                // Variable or Method name
+                case TokenType.Name:
+                    name = token.text;
+                    SkipToken();
+                    break;
             }
 
             // Expression in parentheses - can follow 'name', then it's a function, and not variable
@@ -191,7 +215,8 @@ namespace NiceAttributes.Editor
             if( CurrentTokenType == TokenType.Operator && CurrentTokenText == "(" )
             {
                 SkipToken();
-
+                if( IsEndOfTokens ) throw new InvalidOperationException( "Unexpected end of expression" );
+                
                 if( CurrentTokenText == ")" )       // Function without parameters
                 {
                     expression = new List<object>();
@@ -207,18 +232,34 @@ namespace NiceAttributes.Editor
             }
 
             if( name == null && expression == null ) throw new Exception( "Invalid syntax - nothing parsed!" );
-            if( name == null && expression != null ) token.calculatedValue = expression;
+            if( name == null ) token.calculatedValue = expression;
             if( name != null && expression == null ) token.calculatedValue = GetVariableValue?.Invoke( name );
             if( name != null && expression != null ) token.calculatedValue = GetFunctionValue?.Invoke( name, expression );
             return token.calculatedValue;
         }
         #endregion Factor()
 
+        #region [Math] FormattedNumericalFactor()
+        private object FormattedNumericalFactor()
+        {
+            var result = Factor();
+            if( !IsEndOfTokens && CurrentTokenType == TokenType.StringFormatting )
+            {
+                SkipToken();
+
+                var number = GetDoubleValue( result );
+                var format = Factor();
+                return number.ToString( format.ToString() );
+            }
+            return result;
+        }
+        #endregion [Math] FormattedNumericalFactor()
+        
         #region [Math] Term()
         private object Term()
         {
-            var result = Factor();
-            while( currentTokenIdx < tokens.Count )
+            var result = FormattedNumericalFactor();
+            while( !IsEndOfTokens )
             {
                 var token = tokens[currentTokenIdx];
                 if( token.type != TokenType.Operator ) break;
@@ -226,12 +267,12 @@ namespace NiceAttributes.Editor
                 if( token.text == "*" )
                 {
                     SkipToken();
-                    var right = Factor();
+                    var right = FormattedNumericalFactor();
                     result = GetDoubleValue(result) * GetDoubleValue(right);
                 } else if( token.text == "/" )
                 {
                     SkipToken();
-                    var right = Factor();
+                    var right = FormattedNumericalFactor();
                     result = GetDoubleValue(result) / GetDoubleValue(right);
                 } else break;
             }
@@ -243,7 +284,7 @@ namespace NiceAttributes.Editor
         private object Expression()
         {
             var result = Term();
-            while( currentTokenIdx < tokens.Count )
+            while( !IsEndOfTokens )
             {
                 var token = tokens[currentTokenIdx];
                 if( token.type != TokenType.Operator ) break;
@@ -290,7 +331,8 @@ namespace NiceAttributes.Editor
 
 
         #region [API] Evaluate()
-        public static (object result, bool successful) Evaluate( string expression,
+        public static (object result, bool successful) Evaluate(
+            string expression,
             GetVariableValueDelegate getVariableValue = null,
             GetFunctionValueDelegate getFunctionValue = null )
         {
@@ -304,7 +346,7 @@ namespace NiceAttributes.Editor
                 n.currentTokenIdx = 0;
                 return (n.ExpressionList(), true);
             } catch( Exception ex ) {
-                return ($"<color=red><b>ERROR</b></color>: {ex.Message}", false);
+                return ($"<color=red><b>ERROR at token {n.currentTokenIdx} '{n.CurrentTokenText}'</b></color>: {ex.Message}", false);
                 //return $"<color=red><b>ERROR</b></color>: {ex.Message}\n{ex.InnerException}\n{ex.StackTrace}";
             }
         }

@@ -451,7 +451,7 @@ namespace NiceAttributes.Editor
 
                 item.serializedProperty = property.Copy();
 
-                // Check if the property has children, and needs to be recursivelly connected
+                // Check if the property has children, and needs to be recursively connected
                 if( property.hasChildren && property.isExpanded )
                 {
                     if( item.classContext != null )
@@ -564,7 +564,7 @@ namespace NiceAttributes.Editor
             if( item.errorMessage != null )
             {
                 NiceEditorGUI.HelpBox_Layout( item.errorMessage, MessageType.Error );
-                EditorGUILayout.HelpBox( item.errorMessage, MessageType.Error );
+                //EditorGUILayout.HelpBox( item.errorMessage, MessageType.Error );
             }
 
             if( item.classContext != null )                 // *** Class or Struct with expanded view

@@ -36,9 +36,9 @@ namespace NiceAttributes.Editor
                 return;
             }
 
-            // Draw our custom Inspector
             serializedObject.Update();
 
+            // Draw our custom Inspector
             rootClass.Draw();
 
             serializedObject.ApplyModifiedProperties();
