@@ -15,16 +15,17 @@ namespace NiceAttributes
 
 #if UNITY_EDITOR
         Rect drawRect;
-        public override bool OnGUI_GroupStart( string label )
+        public override bool OnGUI_GroupStart()
         {
             drawRect = UnityEditor.EditorGUILayout.BeginVertical( GUI.skin.box );
             SetLabelAndFieldWidth();
 
             // Fill the background, if set
-            if( BackColor != DefaultColor ) DrawingUtil.FillRect( drawRect, BackColor.ToColor() );
+            if( BackColor != ColorNotSet ) DrawingUtil.FillRect( drawRect, BackColor.ToColor() );
 
 
             // Show the label
+            var label = Label ?? GroupName;
             if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
 
             return true;

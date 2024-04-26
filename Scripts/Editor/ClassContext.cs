@@ -521,7 +521,7 @@ namespace NiceAttributes.Editor
                         {
                             if( newOpenedGroups[i].groupAttribute != null )
                             {
-                                var shouldDraw = newOpenedGroups[i].groupAttribute.OnGUI_GroupStart( newOpenedGroups[i].groupAttribute.GroupName );
+                                var shouldDraw = newOpenedGroups[i].groupAttribute.OnGUI_GroupStart();
                                 if( !shouldDraw )
                                 {
                                     hiddenGroups.Add( newOpenedGroups[i] );

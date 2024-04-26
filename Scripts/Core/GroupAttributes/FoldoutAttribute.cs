@@ -25,15 +25,15 @@ namespace NiceAttributes
         }
 
 #if UNITY_EDITOR
-        public override bool OnGUI_GroupStart( string label )
+        public override bool OnGUI_GroupStart()
         {
             var rect = EditorGUILayout.BeginVertical();
             SetLabelAndFieldWidth();
 
             // Fill the background, if set
-            if( BackColor != DefaultColor ) DrawingUtil.FillRect( rect, BackColor.ToColor() );
+            if( BackColor != ColorNotSet ) DrawingUtil.FillRect( rect, BackColor.ToColor() );
 
-
+            var label = Label ?? GroupName;
             var folded = EditorGUILayout.Foldout( foldedOut, ShowLabel ? label : "", true );
             if( folded != foldedOut ) { // Value changed
                 foldedOut = folded;

@@ -3,22 +3,22 @@
 namespace NiceAttributes
 {
     /// <summary>
-    /// Enum value is actually a RGBA color, in format 0xAABBGGRR
+    /// Enum value is actually an RGBA color, in format 0xRRGGBBAA
     /// </summary>
-    public enum EColor : long
+    public enum EColor : uint
     {
         Clear   = 0,
         White   = 0xffffffff,
-        Black   = 0xff000000,
-        Gray    = 0xff7f7f7f,
-        Red     = 0xff003fff,
-        Pink    = 0xffcb98ff,
-        Orange  = 0xff007fff,
-        Yellow  = 0xff00d3ff,
-        Green   = 0xff4fc862,
-        Blue    = 0xffBD8700,
-        Indigo  = 0xff82004B,
-        Violet  = 0xffff0080
+        Black   = 0x000000ff,
+        Gray    = 0x7f7f7fff,
+        Red     = 0xff3f00ff,
+        Pink    = 0xff98cbff,
+        Orange  = 0xff7f00ff,
+        Yellow  = 0xffd300ff,
+        Green   = 0x62c84fff,
+        Blue    = 0x0078bdff,
+        Indigo  = 0x4b0082ff,
+        Violet  = 0x8000ffff
     }
 
     public static class EColorExtensions

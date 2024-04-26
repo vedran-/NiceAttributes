@@ -43,7 +43,7 @@ namespace NiceAttributes
 
 
         #region OnGUI_GroupStart()
-        public override bool OnGUI_GroupStart( string label )
+        public override bool OnGUI_GroupStart()
         {
             // Draw tab group only when selected in parent
             if( !IsSelectedTab ) return false;
@@ -52,7 +52,7 @@ namespace NiceAttributes
             tabRect = EditorGUILayout.BeginVertical();
 
             // Fill the background, if set
-            if( BackColor != DefaultColor ) DrawingUtil.FillRect( tabRect, BackColor.ToColor() );
+            if( BackColor != ColorNotSet ) DrawingUtil.FillRect( tabRect, BackColor.ToColor() );
 
             DrawingUtil.DrawTabHeader( tabParent );
 

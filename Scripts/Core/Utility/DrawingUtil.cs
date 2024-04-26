@@ -10,9 +10,10 @@ namespace NiceAttributes
 {
     public static class Util
     {
-        #region [uint] ToColor()
-        public static Color ToColor( this uint val )
+        #region [EColor] ToColor()
+        public static Color ToColor( this EColor color )
         {
+            var val = (uint)color;
             return new Color32( (byte)((val >> 24) & 0xFF), (byte)((val >> 16) & 0xFF), (byte)((val >> 8) & 0xFF), (byte)((val >> 0) & 0xFF) );
         }
         #endregion ToColor()
@@ -189,12 +190,12 @@ namespace NiceAttributes
                 ? EditorGUILayout.GetControlRect( GUILayout.MaxWidth( size.x ), GUILayout.MaxHeight( size.y ) )
                 : EditorGUILayout.GetControlRect( GUILayout.MaxHeight( size.y ) );
             var bgRect = fitWidth ? rect.Grow( 3, 3, 3, 3 ) : rect.Grow( 3, 3, 3, 0 );
-            var bgCol = groupAttr?.LabelBackColor == BaseGroupAttribute.DefaultColor ? headerBgColor : groupAttr.LabelBackColor.ToColor();
+            var bgCol = groupAttr?.LabelBackColor == BaseGroupAttribute.ColorNotSet ? headerBgColor : groupAttr.LabelBackColor.ToColor();
             FillRect( bgRect, bgCol );
 
             if( !fitWidth ) rect.y -= 2;
-            var fgCol = groupAttr?.LabelColor == BaseGroupAttribute.DefaultColor ? Color.white : groupAttr.LabelColor.ToColor();
-            var shadowCol = groupAttr?.LabelShadowColor == BaseGroupAttribute.DefaultColor ? Color.gray : groupAttr.LabelShadowColor.ToColor();
+            var fgCol = groupAttr?.LabelColor == BaseGroupAttribute.ColorNotSet ? Color.white : groupAttr.LabelColor.ToColor();
+            var shadowCol = groupAttr?.LabelShadowColor == BaseGroupAttribute.ColorNotSet ? Color.gray : groupAttr.LabelShadowColor.ToColor();
             DrawLabel( rect, label, EditorStyles.boldLabel, fgCol, shadowCol );
         }
         #endregion DrawHeader()
@@ -203,7 +204,7 @@ namespace NiceAttributes
         public static void DrawTabHeader( TabGroupAttribute.TabParent tabParent )
         {
             // Check/create Tab header
-            if( tabParent.tabHeader == null ) tabParent.tabHeader = tabParent.tabGroups.Select( tg => tg.GroupName ).ToArray();
+            if( tabParent.tabHeader == null ) tabParent.tabHeader = tabParent.tabGroups.Select( tg => tg.Label ?? tg.GroupName ).ToArray();
 
             var newIdx = GUILayout.Toolbar( tabParent.selectedTabIdx, tabParent.tabHeader );
             if( newIdx != tabParent.selectedTabIdx )

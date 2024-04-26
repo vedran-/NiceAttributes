@@ -14,12 +14,12 @@ namespace NiceAttributes
 #if UNITY_EDITOR
         int lastItemsDrawn = 0, lastStartId;
 
-        public override bool OnGUI_GroupStart( string label )
+        public override bool OnGUI_GroupStart()
         {
             var rect = EditorGUILayout.BeginHorizontal();
 
             // Fill the background, if set
-            if( BackColor != DefaultColor ) DrawingUtil.FillRect( rect, BackColor.ToColor() );
+            if( BackColor != ColorNotSet ) DrawingUtil.FillRect( rect, BackColor.ToColor() );
 
             lastStartId = GUIUtility.GetControlID( FocusType.Passive );
 
@@ -37,6 +37,7 @@ namespace NiceAttributes
 
 
             // Show the label
+            var label = Label ?? GroupName;
             if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, true, this );
             return true;
         }

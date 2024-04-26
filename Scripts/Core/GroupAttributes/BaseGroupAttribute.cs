@@ -4,15 +4,16 @@ namespace NiceAttributes
 {
     public abstract class BaseGroupAttribute : MetaAttribute
     {
-        public const uint DefaultColor = 0x00000002;
+        public const EColor ColorNotSet = (EColor)0x00000002;
 
         public string   GroupName { get; private set; }
 
-        public bool     ShowLabel { get; set; } = false;
-        public uint     LabelColor { get; set; } = DefaultColor;
-        public uint     LabelShadowColor { get; set; } = DefaultColor;
-        public uint     LabelBackColor { get; set; } = DefaultColor;
-        public uint     BackColor { get; set; } = DefaultColor;
+        public string   Label { get; set; } = null;
+        public bool     ShowLabel { get; set; } = true;
+        public EColor   LabelColor { get; set; } = ColorNotSet;
+        public EColor   LabelShadowColor { get; set; } = ColorNotSet;
+        public EColor   LabelBackColor { get; set; } = ColorNotSet;
+        public EColor   BackColor { get; set; } = ColorNotSet;
 
         public float    LabelWidth { get; set; } = 0;
         public float    FieldWidth { get; set; } = 0;
@@ -29,7 +30,7 @@ namespace NiceAttributes
         /// GUI code to apply when this group starts.
         /// </summary>
         /// <returns>Returns true if group can be drawn, or false if not to draw the group.</returns>
-        public abstract bool OnGUI_GroupStart( string label );
+        public abstract bool OnGUI_GroupStart();
 
         /// <summary>
         /// GUI code to apply when this group ends.
