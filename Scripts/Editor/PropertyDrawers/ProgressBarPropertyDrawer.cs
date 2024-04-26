@@ -37,7 +37,7 @@ namespace NiceAttributes.Editor
             {
                 var fillPercentage = value / CastToFloat(maxValue);
                 var barLabel = (!string.IsNullOrEmpty(progressBarAttribute.Name) ? "[" + progressBarAttribute.Name + "] " : "") + valueFormatted + "/" + maxValue;
-                var barColor = progressBarAttribute.Color.GetColor();
+                var barColor = progressBarAttribute.Color.ToColor();
                 var labelColor = Color.white;
 
                 var indentLength = NiceEditorGUI.GetIndentLength(rect);

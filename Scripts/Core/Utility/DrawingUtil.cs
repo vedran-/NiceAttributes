@@ -1,3 +1,5 @@
+#if UNITY_EDITOR
+
 using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -42,8 +44,8 @@ namespace NiceAttributes
     {
         #region GetDefaultBackgroundColor()
 #if UNITY_EDITOR
-        readonly static Color bgProSkin = new Color32(56, 56, 56, 255), bgPoorSkin = new Color32(194, 194, 194, 255);
-        public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? bgProSkin : bgPoorSkin;
+        static readonly Color BgProSkin = new Color32(56, 56, 56, 255), BgPoorSkin = new Color32(194, 194, 194, 255);
+        public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? BgProSkin : BgPoorSkin;
         //static Color bgColorToRed = Color.Lerp( GUI.skin.window.normal.background.GetPixel( 0, 0 ), Color.red, 0.10f );
 #endif
         #endregion GetDefaultBackgroundColor()
@@ -65,11 +67,11 @@ namespace NiceAttributes
         }
         #endregion DrawRect()
         #region [Rect] FillRect()
-        private static Texture2D drawRectBackgroundTexture = null;
-        public static GUIStyle drawRectTextureStyle = null;
+        private static Texture2D drawRectBackgroundTexture;
+        private static GUIStyle drawRectTextureStyle;
         public static void FillRect( Rect rect, Color color, GUIContent content = null )
         {
-            if( drawRectBackgroundTexture == null ) drawRectBackgroundTexture = Texture2D.whiteTexture;
+            if( !drawRectBackgroundTexture ) drawRectBackgroundTexture = Texture2D.whiteTexture;
             if( drawRectTextureStyle == null ) drawRectTextureStyle = new GUIStyle { normal = new GUIStyleState { background = drawRectBackgroundTexture } };
 
             var backgroundColor = GUI.backgroundColor;
@@ -152,11 +154,10 @@ namespace NiceAttributes
         }
         #endregion GetRectToFillWindow()
 
-        public static string RemoveColorRichTextTags( string str ) => Regex.Replace( str, @"\<(\/)?color(=""?#?\w+""?)?\>", "" );
+        private static string RemoveColorRichTextTags( string str ) => Regex.Replace( str, @"\<(\/)?color(=""?#?\w+""?)?\>", "" );
 
 
 
-#if UNITY_EDITOR
         #region [Rect-Editor only] DrawCheckeredRect()
 #if UNITY_EDITOR
         public static void DrawCheckeredRect( Rect rect, float xSize = 10, float ySize = 10, Color? color = null, float colorFactorTowardsWhite = 0.5f )
@@ -181,7 +182,7 @@ namespace NiceAttributes
         #endregion DrawCheckeredRect()
 
         #region [Editor only] DrawHeader()
-        readonly static Color headerBgColor = new Color32( 3, 45, 53, 255 );
+        static readonly Color HeaderBgColor = new Color32( 3, 45, 53, 255 );
         public static void DrawHeader( string label, bool fitWidth = false, BaseGroupAttribute groupAttr = null )
         {
             var size = EditorStyles.boldLabel.CalcSize( new GUIContent( label ) );
@@ -190,12 +191,12 @@ namespace NiceAttributes
                 ? EditorGUILayout.GetControlRect( GUILayout.MaxWidth( size.x ), GUILayout.MaxHeight( size.y ) )
                 : EditorGUILayout.GetControlRect( GUILayout.MaxHeight( size.y ) );
             var bgRect = fitWidth ? rect.Grow( 3, 3, 3, 3 ) : rect.Grow( 3, 3, 3, 0 );
-            var bgCol = groupAttr?.LabelBackColor == BaseGroupAttribute.ColorNotSet ? headerBgColor : groupAttr.LabelBackColor.ToColor();
+            var bgCol = groupAttr == null || groupAttr.LabelBackColor == BaseGroupAttribute.ColorNotSet ? HeaderBgColor : groupAttr.LabelBackColor.ToColor();
             FillRect( bgRect, bgCol );
 
             if( !fitWidth ) rect.y -= 2;
-            var fgCol = groupAttr?.LabelColor == BaseGroupAttribute.ColorNotSet ? Color.white : groupAttr.LabelColor.ToColor();
-            var shadowCol = groupAttr?.LabelShadowColor == BaseGroupAttribute.ColorNotSet ? Color.gray : groupAttr.LabelShadowColor.ToColor();
+            var fgCol = groupAttr == null || groupAttr.LabelColor == BaseGroupAttribute.ColorNotSet ? Color.white : groupAttr.LabelColor.ToColor();
+            var shadowCol = groupAttr == null || groupAttr.LabelShadowColor == BaseGroupAttribute.ColorNotSet ? Color.gray : groupAttr.LabelShadowColor.ToColor();
             DrawLabel( rect, label, EditorStyles.boldLabel, fgCol, shadowCol );
         }
         #endregion DrawHeader()
@@ -204,7 +205,7 @@ namespace NiceAttributes
         public static void DrawTabHeader( TabGroupAttribute.TabParent tabParent )
         {
             // Check/create Tab header
-            if( tabParent.tabHeader == null ) tabParent.tabHeader = tabParent.tabGroups.Select( tg => tg.Label ?? tg.GroupName ).ToArray();
+            tabParent.tabHeader ??= tabParent.tabGroups.Select(tg => tg.Label ?? tg.GroupName).ToArray();
 
             var newIdx = GUILayout.Toolbar( tabParent.selectedTabIdx, tabParent.tabHeader );
             if( newIdx != tabParent.selectedTabIdx )
@@ -214,6 +215,6 @@ namespace NiceAttributes
             }
         }
         #endregion DrawTabHeader()
-#endif
     }
 }
+#endif

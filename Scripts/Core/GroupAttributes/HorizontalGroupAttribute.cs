@@ -24,12 +24,12 @@ namespace NiceAttributes
             lastStartId = GUIUtility.GetControlID( FocusType.Passive );
 
             // Try to automatically calculate label and field width, so it fits visible space
-            if( false && lastItemsDrawn > 0 && (LabelWidth == 0 || FieldWidth == 0) )
+            if( false && lastItemsDrawn > 0 && (InsideLabelWidth == 0 || InsideFieldWidth == 0) )
             {
                 //var w = (rect.width / lastItemsDrawn) / 2;
                 var w = (EditorGUIUtility.currentViewWidth / lastItemsDrawn) / 2;
-                if( LabelWidth == 0 ) LabelWidth = w;
-                if( FieldWidth == 0 ) FieldWidth = w;
+                if( InsideLabelWidth == 0 ) InsideLabelWidth = w;
+                if( InsideFieldWidth == 0 ) InsideFieldWidth = w;
                 //Debug.Log( $"w: {w:0.#}; sW: {EditorGUIUtility.currentViewWidth:0.#}; rW: {rect.width:0.#}, items: {lastItemsDrawn}" );
             }
 
