@@ -49,7 +49,7 @@ namespace NiceAttributes.Editor
             internal GroupInfo GetParentGroup()
             {
                 if( groups.Length < 2 ) return null;
-                return groups[groups.Length - 2];
+                return groups[^2];
             }
         }
         #endregion class GroupInfo
@@ -67,8 +67,9 @@ namespace NiceAttributes.Editor
         /// <param name="targetObject"></param>
         /// <param name="indentLevel"></param>
         /// <param name="additionalSkipTypes"></param>
+        /// <param name="alwaysUseNiceInspector">If set, it will always use NiceAttribute's Inspector, even if there are not NiceAttributes used in the class</param>
         public static ClassContext CreateContext( Type classType, object targetObject, int indentLevel,
-            Type[] additionalSkipTypes = null, bool alwaysUseNiceInspector = false)
+            Type[] additionalSkipTypes = null, bool alwaysUseNiceInspector = false )
         {
             var ctx = new ClassContext();
             if( alwaysUseNiceInspector ) ctx.HasNiceAttributes = true;
@@ -88,9 +89,9 @@ namespace NiceAttributes.Editor
             // Order class members, as they appear in the source code file
             var orderedMembers = ctx.GetOrderedMembersByLineNumber();
 
-            ctx.BuildDisplayTree( orderedMembers );
+            var groups = ctx.BuildDisplayTree( orderedMembers );
 
-            ctx.InitializeTabs();
+            ctx.InitializeTabGroups( groups );
 
             return ctx;
         }
@@ -98,7 +99,7 @@ namespace NiceAttributes.Editor
 
 
         #region IsVisible()
-        public bool IsVisible( MemberInfo mt )
+        private bool IsVisible( MemberInfo mt )
         {
             if( Attribute.IsDefined( mt, typeof( HideAttribute ) ) )
             {
@@ -108,10 +109,10 @@ namespace NiceAttributes.Editor
 
             if( mt.MemberType == MemberTypes.Property ) return Attribute.IsDefined( mt, typeof( ShowAttribute ) );
             if( mt.MemberType == MemberTypes.Method ) return Attribute.IsDefined( mt, typeof( ButtonAttribute ) );
-            if( mt.MemberType != MemberTypes.Field ) return false;
+            if( mt is not FieldInfo fi ) return false;
 
             // Field
-            var fi = mt as FieldInfo;
+            //var fi = mt as FieldInfo;
             if( Attribute.IsDefined( fi, typeof( ShowAttribute ) ) ) return true;
             if( fi.IsStatic ) return false;     // Static fields - not visible
 
@@ -173,11 +174,11 @@ namespace NiceAttributes.Editor
             // Get all members of current class + all base classes
             for( int i = types.Count - 1; i >= 0; i-- )
             {
-                var members = types[i]
+                var typeMembers = types[i]
                     .GetMembers( AllBindingFields )
                     .Where( IsVisible );      // Only visible members!
 
-                foreach( var m in members )
+                foreach( var m in typeMembers )
                 {
                     // Check member type
                     var fieldInfo = m as FieldInfo;
@@ -281,7 +282,7 @@ namespace NiceAttributes.Editor
         #endregion GetOrderedMembersByLineNumber()
 
         #region BuildDisplayTree()
-        void BuildDisplayTree( IEnumerable<ClassItem> orderedMembers )
+        Dictionary<string, GroupInfo> BuildDisplayTree( IEnumerable<ClassItem> orderedMembers )
         {
             var groups = new Dictionary<string, GroupInfo>();
 
@@ -395,20 +396,26 @@ namespace NiceAttributes.Editor
 
             // Replace old list with a new list, sorted by groups
             this.members = items;
+            
+            //Debug.Log("Members by order:\n" + string.Join( "\n", members.Select( m => $"{m.group?.groupName}: {m.memberInfo.Name}" ) ) );
+
+            return groups;
         }
         #endregion BuildDisplayTree()
     
-        #region InitializeTabs()
-        void InitializeTabs()
+        #region InitializeTabGroups()
+        void InitializeTabGroups( Dictionary<string, GroupInfo> groups )
         {
-            foreach( var item in members )
-            {
-                if( item.memberInfo == null ) continue;
-                if( item.group.groupAttribute is not TabGroupAttribute tabAtt ) continue;
+            //Debug.Log( "Groups:\n" + string.Join( "\n", groups.Select( g => $"{g.Key} - {g.Value.groupAttribute?.GetType().Name}: {string.Join( ", ", g.Value.groups.Select( gg => gg.groupName ) )}" ) ) );
 
-                var parentGroup = item.group.GetParentGroup();
+            foreach( var group in groups.Values )
+            {
+                if( group.groupAttribute is not TabGroupAttribute tabAtt ) continue;
+
+                var parentGroup = group.GetParentGroup();
                 if( parentGroup == null ) {
-                    item.errorMessage = $"TabGroup '{item.group.groupName}' on member '{item.memberInfo.Name}' has no parent!";
+                    Debug.LogError( $"TabGroup '{group.groupName}' has no parent!" );
+                    //item.errorMessage = $"TabGroup '{group.groupName}' has no parent!";
                     continue;
                 }
 
@@ -424,11 +431,35 @@ namespace NiceAttributes.Editor
 
                 tabAtt.tabParent = parentGroup.tabParent;
             }
-
-            // TODO: Reorder members, so all with same Tab parent are next to each other
+/*/
+            foreach( var item in members )
+            {
+                if( item.memberInfo == null ) continue;
+                if( item.group.groupAttribute is not TabGroupAttribute tabAtt ) continue;
+            
+                var parentGroup = item.group.GetParentGroup();
+                if( parentGroup == null ) {
+                    item.errorMessage = $"TabGroup '{item.group.groupName}' on member '{item.memberInfo.Name}' has no parent!";
+                    continue;
+                }
+            
+                if( parentGroup.tabParent == null )
+                {
+                    // New Tab Group
+                    parentGroup.tabParent = new TabGroupAttribute.TabParent() {
+                        tabGroups = new List<TabGroupAttribute>() { tabAtt }
+                    };
+                } else {
+                    if( !parentGroup.tabParent.tabGroups.Contains( tabAtt ) ) parentGroup.tabParent.tabGroups.Add( tabAtt );
+                }
+            
+                tabAtt.tabParent = parentGroup.tabParent;
+            }
+/**/
+            // Next: Reorder members, so all with same Tab parent are next to each other
             // If not, whole Tab Group can jump from place to place when user switches tabs
         }
-        #endregion InitializeTabs()
+        #endregion InitializeTabGroups()
 
         #region [API] ConnectWithSerializedProperties()
         internal static void ConnectWithSerializedProperties( ClassContext ctx, SerializedProperty property )
@@ -445,8 +476,8 @@ namespace NiceAttributes.Editor
                 {
                     if( property.name == "m_Script" )   // Special case - m_Script - insert it as 1st element in list
                     {
-                        var m_Script = new ClassItem() { serializedProperty = property.Copy() };
-                        ctx.members.Insert( 0, m_Script );
+                        var mScript = new ClassItem() { serializedProperty = property.Copy() };
+                        ctx.members.Insert( 0, mScript );
                     } else
                     {
                         var isHidden = PropertyUtility.GetAttribute<HideAttribute>( property ) != null
@@ -493,7 +524,14 @@ namespace NiceAttributes.Editor
             // Returns true, if we should display this group or not
             bool SetActiveGroups( GroupInfo[] newOpenedGroups )
             {
-                if( newOpenedGroups != null ) foreach( var g in newOpenedGroups ) if( hiddenGroups.Contains( g ) ) return false;
+                // if( newOpenedGroups == null ) Debug.Log( ">>>>>> SetActiveGroups: NONE" );
+                // else Debug.Log( ">>>>>> SetActiveGroups: " + string.Join( ", ", newOpenedGroups.Select( g => g.groupName ) ) );
+                
+                if( newOpenedGroups != null ) foreach( var g in newOpenedGroups ) {
+                    if( hiddenGroups.Contains(g) ) {
+                        return false;
+                    }
+                }
 
                 // 1st: close old groups which need closing
                 if( lastOpenGroups != null )
@@ -501,14 +539,31 @@ namespace NiceAttributes.Editor
                     for( int i = lastOpenGroups.Length - 1; i >= 0; --i )
                     {
                         var shouldClose = newOpenedGroups == null
-                        || i >= newOpenedGroups.Length
-                        || lastOpenGroups[i] != newOpenedGroups[i];
+                            || i >= newOpenedGroups.Length
+                            || lastOpenGroups[i] != newOpenedGroups[i];
 
-                        if( shouldClose ) {     // We finished with the group
-                            if( hiddenGroups.Contains( lastOpenGroups[i] ) )
+                        // We finished with the group - close it
+                        if( shouldClose )
+                        {
+                            var isHidden = false;
+                            for( int j = 0; j < i; j++ )
+                            {
+                                if( hiddenGroups.Contains(lastOpenGroups[j]) )
+                                {
+                                    isHidden = true;
+                                    break;
+                                }
+                            } 
+                            //if( hiddenGroups.Contains( lastOpenGroups[i] ) )
+                            if( isHidden )
                             {
                                 hiddenGroups.Remove( lastOpenGroups[i] );   // Remove from list of hidden groups
-                            } else lastOpenGroups[i].groupAttribute?.FinishDrawingGroup();
+                            }
+                            else
+                            {
+                                lastOpenGroups[i].groupAttribute?.FinishDrawingGroup();
+                                //Debug.Log($">> Finish: {lastOpenGroups[i].groupName}");
+                            }
                         }
                     }
                 }
@@ -519,20 +574,18 @@ namespace NiceAttributes.Editor
                     for( int i = 0; i < newOpenedGroups.Length; i++ )
                     {
                         var shouldOpen = lastOpenGroups == null
-                        || i >= lastOpenGroups.Length
-                        || newOpenedGroups[i] != lastOpenGroups[i];
+                            || i >= lastOpenGroups.Length
+                            || newOpenedGroups[i] != lastOpenGroups[i];
 
-                        if( shouldOpen )
+                        if( shouldOpen && newOpenedGroups[i].groupAttribute != null )
                         {
-                            if( newOpenedGroups[i].groupAttribute != null )
+                            var shouldDraw = newOpenedGroups[i].groupAttribute.StartDrawingGroup();
+                            //Debug.Log($">> StartGroup: {newOpenedGroups[i].groupName}: draw:{shouldDraw}");
+                            if( !shouldDraw )
                             {
-                                var shouldDraw = newOpenedGroups[i].groupAttribute.StartDrawingGroup();
-                                if( !shouldDraw )
-                                {
-                                    hiddenGroups.Add( newOpenedGroups[i] );
-                                    lastOpenGroups = newOpenedGroups;
-                                    return false;
-                                }
+                                hiddenGroups.Add( newOpenedGroups[i] );
+                                lastOpenGroups = newOpenedGroups;
+                                return false;
                             }
                         }
                     }
