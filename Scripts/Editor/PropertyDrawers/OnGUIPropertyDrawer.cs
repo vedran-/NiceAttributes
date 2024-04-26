@@ -81,7 +81,7 @@ namespace NiceAttributes.Editor
             var preH = MeasureGUIMethodSize( parentObject, onGuiAttribute.PreDrawMethodName ).height;
             if( Event.current.type == EventType.Repaint ) {
                 preHeight = preH;
-                //Log.Info( $"Pre: {preHeight}, Post: {postHeight}, {Event.current.type}" );
+                //Debug.Log( $"Pre: {preHeight}, Post: {postHeight}, {Event.current.type}" );
             }
 
             return GetPropertyHeight( property ) + preHeight;
@@ -118,12 +118,12 @@ namespace NiceAttributes.Editor
             //DrawingUtil.FillRect( new Rect( -3000, -3000, 6000, 6000 ), Color.red.WithAlpha(0.5f) );
             //GUI.Label( rect, "This is a label inside BeginArea", EditorStyles.helpBox );
 
-            Log.Info( $"Last rect: {GUILayoutUtility.GetLastRect()}, rect: {rect}" );
+            Debug.Log( $"Last rect: {GUILayoutUtility.GetLastRect()}, rect: {rect}" );
 
             // End the custom area
             GUILayout.EndArea();
             //GUI.EndGroup();
-            Log.Info( $"Last rect2: {GUILayoutUtility.GetLastRect()}" );
+            Debug.Log( $"Last rect2: {GUILayoutUtility.GetLastRect()}" );
 
 rect.yMin += preHeight;
 EditorGUI.PropertyField( rect, property, true );
@@ -151,7 +151,7 @@ EditorGUI.EndProperty(); return;
                 //GUI.EndClip();
                 //GUI.EndGroup();
 
-                //Log.Info( $"Pre-rect: {preRect}, {Event.current.type}" );
+                //Debug.Log( $"Pre-rect: {preRect}, {Event.current.type}" );
             }
 #else
             RunGUIMethod( parentObject, onGuiAttribute.PreDrawMethodName );

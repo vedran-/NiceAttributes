@@ -51,7 +51,7 @@ namespace NiceAttributes
                 var w = (EditorGUIUtility.currentViewWidth / lastItemsDrawn) / 2;
                 if( LabelWidth == 0 ) LabelWidth = w;
                 if( FieldWidth == 0 ) FieldWidth = w;
-                //Log.Info( $"w: {w:0.#}; sW: {EditorGUIUtility.currentViewWidth:0.#}; rW: {rect.width:0.#}, items: {lastItemsDrawn}" );
+                //Debug.Log( $"w: {w:0.#}; sW: {EditorGUIUtility.currentViewWidth:0.#}; rW: {rect.width:0.#}, items: {lastItemsDrawn}" );
             }
 
             SetLabelAndFieldWidth();

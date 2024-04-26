@@ -74,7 +74,7 @@ namespace NiceAttributes.Editor
             // NOTE: it can call CreateContext() on any field which we want do display expanded (e.g. non-serialized class with [Show] attribute)
             ctx.GetAllMembers( classType );
 
-            //Log.Info( $"All members {ctx.hasNiceAttributes} for {classType.Name}:\n - " + string.Join( "\n - ", ctx.members.Select( m => $"{m.memberInfo} - {m.memberInfo.GetInterfaceAttributes<INiceAttribute>().FirstOrDefault()?.LineNumber} >> [{ string.Join( ", ", m.niceAttributes.Select( a => a.GetType() ) )}]" ) ) );
+            //Debug.Log( $"All members {ctx.hasNiceAttributes} for {classType.Name}:\n - " + string.Join( "\n - ", ctx.members.Select( m => $"{m.memberInfo} - {m.memberInfo.GetInterfaceAttributes<INiceAttribute>().FirstOrDefault()?.LineNumber} >> [{ string.Join( ", ", m.niceAttributes.Select( a => a.GetType() ) )}]" ) ) );
 
             // If class (or its subclasses) don't have any INiceAttribute, stop further processing
             // - we'll then use default inspector instead of our anyhow
@@ -206,7 +206,7 @@ namespace NiceAttributes.Editor
                                 var obj = propInfo != null ? propInfo.GetValue( targetObject, null )
                                     : fieldInfo != null ? fieldInfo.GetValue( targetObject )
                                     : null;
-                                Log.Assert( obj != null, $"Object for member {m.Name} is null! Parent object was {targetObject}" );
+                                Debug.Assert( obj != null, $"Object for member {m.Name} is null! Parent object was {targetObject}" );
 
                                 // Create new context for the sub-class
                                 memberClassContext = CreateContext( memberType, obj, indentLevel + 1 );
@@ -377,7 +377,7 @@ namespace NiceAttributes.Editor
 
                 if( mostGroupsIdx < 0 ) items.Add( member );     // Insert on last position in the list
                 else items.Insert( mostGroupsIdx + 1, member );  // Insert after last item from this group
-                //Log.Info( $"Item order: " + string.Join( ", ", items.Select( i => $"{i.memberInfo.Name} [{i.group.groupName}]" ) ) );
+                //Debug.Log( $"Item order: " + string.Join( ", ", items.Select( i => $"{i.memberInfo.Name} [{i.group.groupName}]" ) ) );
             }
 
             // Replace old list with a new list, sorted by groups
@@ -441,7 +441,7 @@ namespace NiceAttributes.Editor
 
                         if( !isHidden ) {
                             // Property was not hidden, so it's strange that we don't have ClassItem for it
-                            Log.Error( $"Could not find ClassItem for serialized property {property.name} in {ctx.targetObject}!" );
+                            Debug.LogError( $"Could not find ClassItem for serialized property {property.name} in {ctx.targetObject}!" );
                         }
 
                         //ctx.members.Add( new ClassItem() { serializedProperty = property.Copy() } );
@@ -458,7 +458,7 @@ namespace NiceAttributes.Editor
                     {
                         ConnectWithSerializedProperties( item.classContext, property.Copy() );
                     } else {
-                        Log.Warning( $"SerializedProperty {property.name} has children, but '{item.memberInfo.Name}' has no class context!" );
+                        Debug.LogWarning( $"SerializedProperty {property.name} has children, but '{item.memberInfo.Name}' has no class context!" );
                     }
                 }
 
