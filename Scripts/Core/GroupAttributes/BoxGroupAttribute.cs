@@ -7,10 +7,10 @@ namespace NiceAttributes
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
     public class BoxGroupAttribute : BaseGroupAttribute
     {
-        public BoxGroupAttribute( string groupName = "", bool showLabel = true, [CallerLineNumber] int lineNumber = 0 ) 
+        public BoxGroupAttribute( string groupName = "", bool showTitle = true, [CallerLineNumber] int lineNumber = 0 ) 
             : base( groupName, lineNumber )
         {
-            ShowLabel = showLabel;
+            ShowTitle = showTitle;
         }
 
 #if UNITY_EDITOR
@@ -25,8 +25,8 @@ namespace NiceAttributes
 
 
             // Show the label
-            var label = Title ?? GroupName;
-            if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
+            var label = GetLabel();
+            if( !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
 
             return true;
         }

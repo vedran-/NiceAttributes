@@ -18,8 +18,8 @@ namespace NiceAttributes
             // Fill the background, if set
             if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( rect, GroupBackColor.ToColor() );
 
-            var label = Title ?? GroupName;
-            if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
+            var label = GetLabel();
+            if( !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
             return true;
         }
 

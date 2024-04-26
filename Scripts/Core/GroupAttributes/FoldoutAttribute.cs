@@ -33,7 +33,7 @@ namespace NiceAttributes
             if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( rect, GroupBackColor.ToColor() );
 
             var label = Title ?? GroupName;
-            var folded = EditorGUILayout.Foldout( foldedOut, ShowLabel ? label : "", true );
+            var folded = EditorGUILayout.Foldout( foldedOut, GetLabel(), true );
             if( folded != foldedOut ) { // Value changed
                 foldedOut = folded;
                 EditorPrefs.SetBool( id, folded );

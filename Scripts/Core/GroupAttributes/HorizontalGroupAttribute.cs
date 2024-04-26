@@ -35,8 +35,8 @@ namespace NiceAttributes
 
 
             // Show the label
-            var label = Title ?? GroupName;
-            if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, true, this );
+            var label = GetLabel();
+            if( !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, true, this );
             return true;
         }
 

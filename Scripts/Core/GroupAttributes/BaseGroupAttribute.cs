@@ -1,4 +1,5 @@
-﻿using UnityEditor;
+﻿using System.Text.RegularExpressions;
+using UnityEditor;
 
 namespace NiceAttributes
 {
@@ -9,7 +10,7 @@ namespace NiceAttributes
         public string   GroupName { get; private set; }
 
         public string   Title { get; set; } = null;
-        public bool     ShowLabel { get; set; } = false;
+        public bool     ShowTitle { get; set; } = false;
         public EColor   TitleColor { get; set; } = ColorNotSet;
         public EColor   TitleShadowColor { get; set; } = ColorNotSet;
         public EColor   TitleBackColor { get; set; } = ColorNotSet;
@@ -54,8 +55,15 @@ namespace NiceAttributes
             RestoreLabelAndFieldWidth();
         }
         #endregion [API] FinishDrawingGroup()
-        
-        
+
+        #region [Util] GetLabel()
+        protected string GetLabel()
+        {
+            if( !string.IsNullOrEmpty(Title) ) return Title;
+            if( !ShowTitle ) return null;
+            return GroupName;
+        }
+        #endregion [Util] GetLabel()
 
         #region [Util] SetLabelAndFieldWidth()
         float originalLabelWidth = 0, originalFieldWidth = 0;
