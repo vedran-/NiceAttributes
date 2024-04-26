@@ -4,7 +4,7 @@ using UnityEditor;
 namespace NiceAttributes.Editor
 {
     [Serializable]
-    public abstract class NiceEditorWindow<T> : EditorWindow where T : EditorWindow
+    public abstract class NiceEditorWindow : EditorWindow
     {
         private ClassContext rootClass;
 
@@ -16,10 +16,12 @@ namespace NiceAttributes.Editor
         {
             var additionalSkipTypes = new Type[]
             {
-                typeof(EditorWindow),
+                typeof(NiceEditorWindow),
+                typeof(EditorWindow)
             };
-            
-            rootClass = ClassContext.CreateContext(typeof(T), this, 0, additionalSkipTypes);
+
+            var type = this.GetType();
+            rootClass = ClassContext.CreateContext(type, this, 0, additionalSkipTypes);
         }
         #endregion OnEnable()
 

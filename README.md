@@ -14,6 +14,13 @@ The project's name is a nod to the original, acknowledging the groundwork laid b
 That means that buttons defined next to a field will be displayed next to that field in the inspector.
 - **Dynamic Text** - You can use formula inside text. That formula can use local **fields** and **properties**, which are treated as variables, or even call local **methods**, which are treated as functions.
 
+- **Custom GUI** - You can display custom GUI in the Inspector using the `[OnGUI]` attribute.
+- **InfoBox** - You can display an InfoBox in the Inspector above some visible Method, Field, or Property.
+  - InfoBox types: Info, Warning, Error
+  - Text in the InfoBox can be dynamic.
+
+- **NiceEditorWindow** - You can create custom editor windows by extending `NiceEditorWindow` class.
+That way you don't even have to create `OnGUI()` method - just create fields and properties like you would for any other class, and they will be displayed in the editor window.
 
 
 ### OnGUI

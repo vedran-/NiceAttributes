@@ -59,7 +59,6 @@ namespace NiceAttributes.Editor
 
 
         #region [API] CreateContext()
-
         /// <summary>
         /// Get all members of the class and all its base classes.
         /// It also recursively visits subclasses/substructs
@@ -139,7 +138,7 @@ namespace NiceAttributes.Editor
         #region GetAllMembers()
         const BindingFlags  AllBindingFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
         readonly static Type[] SkipTypes = new Type[] { typeof(UnityEngine.Object), typeof(ScriptableObject), typeof(MonoBehaviour) };
-        void GetAllMembers(Type classType, Type[] additionalSkipTypes)
+        void GetAllMembers( Type classType, Type[] additionalSkipTypes )
         {
             // Add all base types to a list - we need their members too, we inherited them!
             var types = new List<Type>() { classType };
@@ -194,7 +193,10 @@ namespace NiceAttributes.Editor
                         //if( memberType.IsArray ) memberType = memberType.GetElementType();
                         //if( memberType.IsGenericList() ) memberType = memberType.GetGenericArguments()[0];
 
-                        if( memberType.IsClassOrStruct() )  // Class or structs - check if we want to show them expanded (with all their members)
+                        var treatAsClassOrStruct = memberType.IsClassOrStruct()
+                                                   && memberType != typeof(string);
+                        
+                        if( treatAsClassOrStruct )  // Class or structs - check if we want to show them expanded (with all their members)
                         {
                             // Class or Struct has [Hide] attribute - so don't show this whole field at all
                             if( Attribute.IsDefined( memberType, typeof( HideAttribute ) ) ) {
@@ -556,7 +558,7 @@ namespace NiceAttributes.Editor
 
 
         #region DrawItem()
-        static Color bgNonSerialized = Color.Lerp( DrawingUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f );
+        static readonly Color bgNonSerialized = Color.Lerp( DrawingUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f );
         private void DrawItem( ClassItem item )
         {
             var itemRect = EditorGUILayout.BeginVertical();

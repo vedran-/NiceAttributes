@@ -130,29 +130,28 @@ namespace NiceAttributes.Editor
 
             if( methodInfo.GetParameters().All( p => p.IsOptional ) )
             {
-                ButtonAttribute buttonAttribute = (ButtonAttribute)methodInfo.GetCustomAttributes(typeof(ButtonAttribute), true)[0];
-                string buttonText = string.IsNullOrEmpty(buttonAttribute.Text) ? ObjectNames.NicifyVariableName(methodInfo.Name) : buttonAttribute.Text;
+                var buttonAttribute = (ButtonAttribute)methodInfo.GetCustomAttributes(typeof(ButtonAttribute), true)[0];
+                var buttonText = string.IsNullOrEmpty(buttonAttribute.Text) ? ObjectNames.NicifyVariableName(methodInfo.Name) : buttonAttribute.Text;
+                var buttonEnabled = ButtonUtility.IsEnabled( target, methodInfo );
 
-                bool buttonEnabled = ButtonUtility.IsEnabled( target, methodInfo );
-
-                ButtonEnableMode mode = buttonAttribute.SelectedEnableMode;
+                var mode = buttonAttribute.SelectedEnableMode;
                 buttonEnabled &=
                     mode == ButtonEnableMode.Always ||
                     mode == ButtonEnableMode.Editor && !Application.isPlaying ||
                     mode == ButtonEnableMode.Playmode && Application.isPlaying;
 
-                bool methodIsCoroutine = methodInfo.ReturnType == typeof(IEnumerator);
+                var methodIsCoroutine = methodInfo.ReturnType == typeof(IEnumerator);
                 if( methodIsCoroutine )
                 {
-                    buttonEnabled &= (Application.isPlaying ? true : false);
+                    buttonEnabled &= Application.isPlaying;
                 }
 
                 EditorGUI.BeginDisabledGroup( !buttonEnabled );
 
                 if( GUILayout.Button( buttonText, _buttonStyle ) )
                 {
-                    object[] defaultParams = methodInfo.GetParameters().Select(p => p.DefaultValue).ToArray();
-                    IEnumerator methodResult = methodInfo.Invoke(target, defaultParams) as IEnumerator;
+                    var defaultParams = methodInfo.GetParameters().Select(p => p.DefaultValue).ToArray();
+                    var methodResult = methodInfo.Invoke(target, defaultParams) as IEnumerator;
 
                     if( !Application.isPlaying )
                     {
@@ -179,43 +178,56 @@ namespace NiceAttributes.Editor
                 EditorGUI.EndDisabledGroup();
             } else
             {
-                string warning = typeof(ButtonAttribute).Name + $" works only on methods with no parameters [{methodInfo.Name}]";
+                string warning = nameof(ButtonAttribute) + $" works only on methods with no parameters [{methodInfo.Name}]";
                 HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object, logToConsole: true );
             }
         }
         #endregion Button()
 
         #region NativeProperty_Layout()
-        public static void NativeProperty_Layout( object target, PropertyInfo property )
+        internal static void NativeProperty_Layout( object target, PropertyInfo property )
         {
             object value = property.GetValue(target, null);
 
-            if( value == null )
-            {
-                string warning = string.Format("{0} is null. {1} doesn't support reference types with null value", ObjectNames.NicifyVariableName(property.Name), typeof(ShowAttribute).Name);
-                HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
-            } else if( !Field_Layout( value, ObjectNames.NicifyVariableName( property.Name ) ) )
+            // if( value == null )
+            // {
+            //     string warning = string.Format("{0} is null. {1} doesn't support reference types with null value", ObjectNames.NicifyVariableName(property.Name), typeof(ShowAttribute).Name);
+            //     HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
+            //     return;
+            // }
+            
+            
+            if( !Field_Layout( value, property.PropertyType, ObjectNames.NicifyVariableName( property.Name ), out var outValue ) )
             {
                 string warning = string.Format("{0} doesn't support {1} types", typeof(ShowAttribute).Name, property.PropertyType.Name);
                 HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
+                return;
             }
+            
+            property.SetValue(target, outValue, null);
         }
         #endregion NativeProperty_Layout()
 
         #region NonSerializedField_Layout()
-        public static void NonSerializedField_Layout( object target, FieldInfo field )
+        internal static void NonSerializedField_Layout( object target, FieldInfo field )
         {
             object value = field.GetValue( target );
 
-            if( value == null )
-            {
-                string warning = string.Format("{0} is null. {1} doesn't support reference types with null value", ObjectNames.NicifyVariableName(field.Name), typeof(ShowAttribute).Name);
-                HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
-            } else if( !Field_Layout( value, ObjectNames.NicifyVariableName( field.Name ) ) )
+            // if( value == null )
+            // {
+            //     string warning = string.Format("{0} is null. {1} doesn't support reference types with null value", ObjectNames.NicifyVariableName(field.Name), typeof(ShowAttribute).Name);
+            //     HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
+            //     return;
+            // } 
+            
+            if( !Field_Layout( value, field.FieldType, ObjectNames.NicifyVariableName( field.Name ), out var outValue ) )
             {
                 string warning = string.Format("{0} doesn't support {1} types", typeof(ShowAttribute).Name, field.FieldType.Name);
                 HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
+                return;
             }
+
+            field.SetValue(target, outValue);
         }
         #endregion NonSerializedField_Layout()
 
@@ -327,82 +339,89 @@ namespace NiceAttributes.Editor
 
 
         #region Field_Layout()
-        public static bool Field_Layout( object value, string label )
+        private static bool Field_Layout( object value, Type valueType, string label, out object outValue )
         {
-            using( new EditorGUI.DisabledScope( disabled: true ) )
+            using( new EditorGUI.DisabledScope( disabled: false ) )
             {
-                bool isDrawn = true;
-                Type valueType = value.GetType();
-
+                var isDrawn = true;
                 if( valueType == typeof( bool ) )
                 {
-                    EditorGUILayout.Toggle( label, (bool)value );
+                    outValue = EditorGUILayout.Toggle( label, (bool)value );
                 } else if( valueType == typeof( short ) )
                 {
-                    EditorGUILayout.IntField( label, (short)value );
+                    outValue = EditorGUILayout.IntField( label, (short)value );
                 } else if( valueType == typeof( ushort ) )
                 {
-                    EditorGUILayout.IntField( label, (ushort)value );
+                    outValue = EditorGUILayout.IntField( label, (ushort)value );
                 } else if( valueType == typeof( int ) )
                 {
-                    EditorGUILayout.IntField( label, (int)value );
+                    outValue = EditorGUILayout.IntField( label, (int)value );
                 } else if( valueType == typeof( uint ) )
                 {
-                    EditorGUILayout.LongField( label, (uint)value );
+                    outValue = EditorGUILayout.LongField( label, (uint)value );
                 } else if( valueType == typeof( long ) )
                 {
-                    EditorGUILayout.LongField( label, (long)value );
+                    outValue = EditorGUILayout.LongField( label, (long)value );
                 } else if( valueType == typeof( ulong ) )
                 {
-                    EditorGUILayout.TextField( label, ((ulong)value).ToString() );
+                    var val = EditorGUILayout.TextField( label, ((ulong)value).ToString() );
+                    if( ulong.TryParse(val, out var outVal) )
+                    {
+                        outValue = outVal;
+                    } else
+                    {
+                        HelpBox_Layout( $"Invalid value '{val}'", MessageType.Warning );
+                        outValue = value;   // Don't change input value
+                    }
                 } else if( valueType == typeof( float ) )
                 {
-                    EditorGUILayout.FloatField( label, (float)value );
+                    outValue = EditorGUILayout.FloatField( label, (float)value );
                 } else if( valueType == typeof( double ) )
                 {
-                    EditorGUILayout.DoubleField( label, (double)value );
+                    outValue = EditorGUILayout.DoubleField( label, (double)value );
                 } else if( valueType == typeof( string ) )
                 {
-                    EditorGUILayout.TextField( label, (string)value );
+                    outValue = EditorGUILayout.TextField( label, (string)value );
                 } else if( valueType == typeof( Vector2 ) )
                 {
-                    EditorGUILayout.Vector2Field( label, (Vector2)value );
+                    outValue = EditorGUILayout.Vector2Field( label, (Vector2)value );
                 } else if( valueType == typeof( Vector3 ) )
                 {
-                    EditorGUILayout.Vector3Field( label, (Vector3)value );
+                    outValue = EditorGUILayout.Vector3Field( label, (Vector3)value );
                 } else if( valueType == typeof( Vector4 ) )
                 {
-                    EditorGUILayout.Vector4Field( label, (Vector4)value );
+                    outValue = EditorGUILayout.Vector4Field( label, (Vector4)value );
                 } else if( valueType == typeof( Vector2Int ) )
                 {
-                    EditorGUILayout.Vector2IntField( label, (Vector2Int)value );
+                    outValue = EditorGUILayout.Vector2IntField( label, (Vector2Int)value );
                 } else if( valueType == typeof( Vector3Int ) )
                 {
-                    EditorGUILayout.Vector3IntField( label, (Vector3Int)value );
+                    outValue = EditorGUILayout.Vector3IntField( label, (Vector3Int)value );
                 } else if( valueType == typeof( Color ) )
                 {
-                    EditorGUILayout.ColorField( label, (Color)value );
+                    outValue = EditorGUILayout.ColorField( label, (Color)value );
                 } else if( valueType == typeof( Bounds ) )
                 {
-                    EditorGUILayout.BoundsField( label, (Bounds)value );
+                    outValue = EditorGUILayout.BoundsField( label, (Bounds)value );
                 } else if( valueType == typeof( Rect ) )
                 {
-                    EditorGUILayout.RectField( label, (Rect)value );
+                    outValue = EditorGUILayout.RectField( label, (Rect)value );
                 } else if( valueType == typeof( RectInt ) )
                 {
-                    EditorGUILayout.RectIntField( label, (RectInt)value );
+                    outValue = EditorGUILayout.RectIntField( label, (RectInt)value );
                 } else if( typeof( UnityEngine.Object ).IsAssignableFrom( valueType ) )
                 {
-                    EditorGUILayout.ObjectField( label, (UnityEngine.Object)value, valueType, true );
+                    outValue = EditorGUILayout.ObjectField( label, (UnityEngine.Object)value, valueType, true );
                 } else if( valueType.BaseType == typeof( Enum ) )
                 {
-                    EditorGUILayout.EnumPopup( label, (Enum)value );
+                    outValue = EditorGUILayout.EnumPopup( label, (Enum)value );
                 } else if( valueType.BaseType == typeof( TypeInfo ) )
                 {
-                    EditorGUILayout.TextField( label, value.ToString() );
+                    outValue = EditorGUILayout.TextField( label, value.ToString() );
                 } else
                 {
                     isDrawn = false;
+                    outValue = null;
                 }
 
                 return isDrawn;
