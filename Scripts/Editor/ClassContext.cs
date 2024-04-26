@@ -59,12 +59,17 @@ namespace NiceAttributes.Editor
 
 
         #region [API] CreateContext()
+
         /// <summary>
         /// Get all members of the class and all its base classes.
         /// It also recursively visits subclasses/substructs
         /// </summary>
-        /// <param name="type">Type to return all members for</param>
-        public static ClassContext CreateContext( Type classType, object targetObject, int indentLevel )
+        /// <param name="classType"></param>
+        /// <param name="targetObject"></param>
+        /// <param name="indentLevel"></param>
+        /// <param name="additionalSkipTypes"></param>
+        public static ClassContext CreateContext(Type classType, object targetObject, int indentLevel,
+            Type[] additionalSkipTypes = null)
         {
             var ctx = new ClassContext();
             ctx.targetObject = targetObject;
@@ -72,7 +77,7 @@ namespace NiceAttributes.Editor
 
             // Get all class members
             // NOTE: it can call CreateContext() on any field which we want do display expanded (e.g. non-serialized class with [Show] attribute)
-            ctx.GetAllMembers( classType );
+            ctx.GetAllMembers( classType, additionalSkipTypes );
 
             //Debug.Log( $"All members {ctx.hasNiceAttributes} for {classType.Name}:\n - " + string.Join( "\n - ", ctx.members.Select( m => $"{m.memberInfo} - {m.memberInfo.GetInterfaceAttributes<INiceAttribute>().FirstOrDefault()?.LineNumber} >> [{ string.Join( ", ", m.niceAttributes.Select( a => a.GetType() ) )}]" ) ) );
 
@@ -134,7 +139,7 @@ namespace NiceAttributes.Editor
         #region GetAllMembers()
         const BindingFlags  AllBindingFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
         readonly static Type[] SkipTypes = new Type[] { typeof(UnityEngine.Object), typeof(ScriptableObject), typeof(MonoBehaviour) };
-        void GetAllMembers( Type classType )
+        void GetAllMembers(Type classType, Type[] additionalSkipTypes)
         {
             // Add all base types to a list - we need their members too, we inherited them!
             var types = new List<Type>() { classType };
@@ -142,6 +147,7 @@ namespace NiceAttributes.Editor
             {
                 var bt = types.Last().BaseType;
                 if( SkipTypes.Contains( bt ) ) break;
+                if( additionalSkipTypes != null && additionalSkipTypes.Contains( bt ) ) break;
                 types.Add( bt );
             }
 
