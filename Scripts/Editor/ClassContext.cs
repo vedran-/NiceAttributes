@@ -67,15 +67,16 @@ namespace NiceAttributes.Editor
         /// <param name="targetObject"></param>
         /// <param name="indentLevel"></param>
         /// <param name="additionalSkipTypes"></param>
-        public static ClassContext CreateContext(Type classType, object targetObject, int indentLevel,
-            Type[] additionalSkipTypes = null)
+        public static ClassContext CreateContext( Type classType, object targetObject, int indentLevel,
+            Type[] additionalSkipTypes = null, bool alwaysUseNiceInspector = false)
         {
             var ctx = new ClassContext();
+            if( alwaysUseNiceInspector ) ctx.HasNiceAttributes = true;
             ctx.targetObject = targetObject;
             ctx.indentLevel = indentLevel;
 
             // Get all class members
-            // NOTE: it can call CreateContext() on any field which we want do display expanded (e.g. non-serialized class with [Show] attribute)
+            // NOTE: it can call CreateContext() on any field which we want to display expanded (e.g. non-serialized class with [Show] attribute)
             ctx.GetAllMembers( classType, additionalSkipTypes );
 
             //Debug.Log( $"All members {ctx.hasNiceAttributes} for {classType.Name}:\n - " + string.Join( "\n - ", ctx.members.Select( m => $"{m.memberInfo} - {m.memberInfo.GetInterfaceAttributes<INiceAttribute>().FirstOrDefault()?.LineNumber} >> [{ string.Join( ", ", m.niceAttributes.Select( a => a.GetType() ) )}]" ) ) );
@@ -124,7 +125,7 @@ namespace NiceAttributes.Editor
                 if( fieldType.IsGenericList() ) fieldType = fieldType.GetGenericArguments()[0];
 
                 // Class or struct - only if it has [Serialized] attribute, or if it inherits from ScriptableObject
-                if( isVisible && fieldType.IsClassOrStruct() )
+                if( fieldType.IsClassOrStruct() )
                 {
                     isVisible = Attribute.IsDefined( fieldType, typeof( SerializableAttribute ) )
                         || Attribute.IsDefined( fieldType, typeof( ShowAttribute ) )
@@ -137,7 +138,7 @@ namespace NiceAttributes.Editor
 
         #region GetAllMembers()
         const BindingFlags  AllBindingFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
-        readonly static Type[] SkipTypes = new Type[] { typeof(UnityEngine.Object), typeof(ScriptableObject), typeof(MonoBehaviour) };
+        static readonly Type[] SkipTypes = new Type[] { typeof(UnityEngine.Object), typeof(ScriptableObject), typeof(MonoBehaviour) };
         void GetAllMembers( Type classType, Type[] additionalSkipTypes )
         {
             // Add all base types to a list - we need their members too, we inherited them!
@@ -174,7 +175,7 @@ namespace NiceAttributes.Editor
             {
                 var members = types[i]
                     .GetMembers( AllBindingFields )
-                    .Where( m => IsVisible( m ) );      // Only visible members!
+                    .Where( IsVisible );      // Only visible members!
 
                 foreach( var m in members )
                 {
@@ -558,14 +559,14 @@ namespace NiceAttributes.Editor
 
 
         #region DrawItem()
-        static readonly Color bgNonSerialized = Color.Lerp( DrawingUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f );
+        static readonly Color BgNonSerialized = Color.Lerp( DrawingUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f );
         private void DrawItem( ClassItem item )
         {
             var itemRect = EditorGUILayout.BeginVertical();
 
             // Non-serialized properties will have slightly reddish background
             if( item.serializedProperty == null && !(item.memberInfo is MethodInfo) ) {
-                DrawingUtil.FillRect( itemRect, bgNonSerialized );
+                DrawingUtil.FillRect( itemRect, BgNonSerialized );
             }
 
             // Draw error message, if any

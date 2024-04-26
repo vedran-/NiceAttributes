@@ -1,6 +1,5 @@
 using System;
 using UnityEditor;
-using UnityEngine;
 
 namespace NiceAttributes.Editor
 {
@@ -22,7 +21,7 @@ namespace NiceAttributes.Editor
             };
 
             var type = this.GetType();
-            rootClass = ClassContext.CreateContext(type, this, 0, additionalSkipTypes);
+            rootClass = ClassContext.CreateContext( type, this, 0, additionalSkipTypes, true );
         }
         #endregion OnEnable()
 
@@ -39,15 +38,11 @@ namespace NiceAttributes.Editor
         {
             OnPreGUI();
 
-            // If the class we need to display doesn't use NiceAttributes, then just use the default Inspector
-            if( rootClass == null || !rootClass.HasNiceAttributes )
+            if( rootClass != null )
             {
-                //DrawDefaultInspector();
-                return;
+                // Draw our custom Inspector
+                rootClass.Draw();
             }
-
-            // Draw our custom Inspector
-            rootClass.Draw();
 
             OnPostGUI();
         }
