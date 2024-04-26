@@ -13,7 +13,7 @@ namespace NiceAttributes.Editor
         public const float IndentLength = 15.0f;
         public const float HorizontalSpacing = 2.0f;
 
-        private static GUIStyle _buttonStyle = new GUIStyle(GUI.skin.button) { richText = true };
+        private static readonly GUIStyle _buttonStyle = new GUIStyle(GUI.skin.button) { richText = true };
 
         private delegate void PropertyFieldFunction( Rect rect, SerializedProperty property, GUIContent label, bool includeChildren );
 
@@ -187,19 +187,11 @@ namespace NiceAttributes.Editor
         #region NativeProperty_Layout()
         internal static void NativeProperty_Layout( object target, PropertyInfo property )
         {
-            object value = property.GetValue(target, null);
-
-            // if( value == null )
-            // {
-            //     string warning = string.Format("{0} is null. {1} doesn't support reference types with null value", ObjectNames.NicifyVariableName(property.Name), typeof(ShowAttribute).Name);
-            //     HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
-            //     return;
-            // }
-            
-            
-            if( !Field_Layout( value, property.PropertyType, ObjectNames.NicifyVariableName( property.Name ), out var outValue ) )
+            var value = property.GetValue(target, null);
+            var label = new GUIContent( ObjectNames.NicifyVariableName(property.Name) );
+            if( !Field_Layout( value, property.PropertyType, label, out var outValue ) )
             {
-                string warning = string.Format("{0} doesn't support {1} types", typeof(ShowAttribute).Name, property.PropertyType.Name);
+                var warning = $"{nameof(ShowAttribute)} doesn't support {property.PropertyType.Name} types";
                 HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
                 return;
             }
@@ -211,18 +203,11 @@ namespace NiceAttributes.Editor
         #region NonSerializedField_Layout()
         internal static void NonSerializedField_Layout( object target, FieldInfo field )
         {
-            object value = field.GetValue( target );
-
-            // if( value == null )
-            // {
-            //     string warning = string.Format("{0} is null. {1} doesn't support reference types with null value", ObjectNames.NicifyVariableName(field.Name), typeof(ShowAttribute).Name);
-            //     HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
-            //     return;
-            // } 
-            
-            if( !Field_Layout( value, field.FieldType, ObjectNames.NicifyVariableName( field.Name ), out var outValue ) )
+            var value = field.GetValue( target );
+            var label = new GUIContent( ObjectNames.NicifyVariableName(field.Name) );
+            if( !Field_Layout( value, field.FieldType, label, out var outValue ) )
             {
-                string warning = string.Format("{0} doesn't support {1} types", typeof(ShowAttribute).Name, field.FieldType.Name);
+                var warning = $"{nameof(ShowAttribute)} doesn't support {field.FieldType.Name} types";
                 HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
                 return;
             }
@@ -339,7 +324,7 @@ namespace NiceAttributes.Editor
 
 
         #region Field_Layout()
-        private static bool Field_Layout( object value, Type valueType, string label, out object outValue )
+        private static bool Field_Layout( object value, Type valueType, GUIContent label, out object outValue )
         {
             using( new EditorGUI.DisabledScope( disabled: false ) )
             {

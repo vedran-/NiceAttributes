@@ -23,6 +23,10 @@ That means that buttons defined next to a field will be displayed next to that f
 That way you don't even have to create `OnGUI()` method - just create fields and properties like you would for any other class, and they will be displayed in the editor window.
 
 
+TODO:
+- GenericGroup
+
+
 ### OnGUI
 
 - `[OnGUI]` - Displays a custom GUI in the Inspector.
