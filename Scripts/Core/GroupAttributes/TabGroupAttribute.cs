@@ -43,7 +43,6 @@ namespace NiceAttributes
 
 
         #region OnGUI_GroupStart()
-
         private protected override bool OnGUI_GroupStart()
         {
             // Draw tab group only when selected in parent
@@ -65,9 +64,10 @@ namespace NiceAttributes
         #endregion OnGUI_GroupStart()
 
         #region OnGUI_GroupEnd()
-
         private protected override void OnGUI_GroupEnd()
         {
+            if( !IsSelectedTab ) return;
+
             // Calculate number of items drawn by using ControlID - it increases with each control drawn
             //lastItemsDrawn = GUIUtility.GetControlID( FocusType.Passive ) - lastStartId;
 
