@@ -43,7 +43,8 @@ namespace NiceAttributes
 
 
         #region OnGUI_GroupStart()
-        public override bool OnGUI_GroupStart()
+
+        private protected override bool OnGUI_GroupStart()
         {
             // Draw tab group only when selected in parent
             if( !IsSelectedTab ) return false;
@@ -52,27 +53,24 @@ namespace NiceAttributes
             tabRect = EditorGUILayout.BeginVertical();
 
             // Fill the background, if set
-            if( BackColor != ColorNotSet ) DrawingUtil.FillRect( tabRect, BackColor.ToColor() );
+            if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( tabRect, GroupBackColor.ToColor() );
 
             DrawingUtil.DrawTabHeader( tabParent );
 
             // Draw client area
             var rect = EditorGUILayout.BeginVertical();
 
-
-            SetLabelAndFieldWidth();
-
             return true;
         }
         #endregion OnGUI_GroupStart()
 
         #region OnGUI_GroupEnd()
-        public override void OnGUI_GroupEnd()
+
+        private protected override void OnGUI_GroupEnd()
         {
             // Calculate number of items drawn by using ControlID - it increases with each control drawn
             //lastItemsDrawn = GUIUtility.GetControlID( FocusType.Passive ) - lastStartId;
 
-            RestoreLabelAndFieldWidth();
             EditorGUILayout.EndVertical();
             GUILayout.Space( 3 );
             EditorGUILayout.EndVertical();

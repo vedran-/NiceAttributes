@@ -187,6 +187,8 @@ namespace NiceAttributes.Editor
                         : propInfo != null ? propInfo.PropertyType
                         : methodInfo != null ? methodInfo.ReturnType
                         : null;
+                    
+                    if( propInfo != null && !propInfo.CanRead ) continue;    // Skip write-only properties
 
                     ClassContext memberClassContext = null;
                     if( memberType != null && !memberType.IsArray && !memberType.IsGenericList() )
@@ -334,10 +336,12 @@ namespace NiceAttributes.Editor
                 {
                     var groupName = groupAttribute != null ? $"root/{groupAttribute.GroupName}" : "root";
                     var groupInfo = GetGroup( groupName );
-
+                    
                     // First direct assignment of this group type
                     // That way, we can use groups with subgroups, even before we define them!
-                    if( groupInfo.groupAttribute == null ) groupInfo.groupAttribute = groupAttribute;
+                    //
+                    // Special case: generic group attribute - will always be overwritten by any other group type
+                    if( groupInfo.groupAttribute == null || groupInfo.groupAttribute is GroupAttribute ) groupInfo.groupAttribute = groupAttribute;
 
                     if( groupInfo.groups != null && groupInfo.groups.Length > deepestLevel )
                     {
@@ -504,7 +508,7 @@ namespace NiceAttributes.Editor
                             if( hiddenGroups.Contains( lastOpenGroups[i] ) )
                             {
                                 hiddenGroups.Remove( lastOpenGroups[i] );   // Remove from list of hidden groups
-                            } else lastOpenGroups[i].groupAttribute?.OnGUI_GroupEnd();
+                            } else lastOpenGroups[i].groupAttribute?.FinishDrawingGroup();
                         }
                     }
                 }
@@ -522,7 +526,7 @@ namespace NiceAttributes.Editor
                         {
                             if( newOpenedGroups[i].groupAttribute != null )
                             {
-                                var shouldDraw = newOpenedGroups[i].groupAttribute.OnGUI_GroupStart();
+                                var shouldDraw = newOpenedGroups[i].groupAttribute.StartDrawingGroup();
                                 if( !shouldDraw )
                                 {
                                     hiddenGroups.Add( newOpenedGroups[i] );

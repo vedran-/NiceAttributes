@@ -7,9 +7,9 @@ The project's name is a nod to the original, acknowledging the groundwork laid b
 
 - **Optimized for speed:** NiceAttributes is designed to be fast. It should not slow down your project in any way. 
 - **[Show]** and **[Hide]** attributes: Show or hide any field, property, or even non-Serializable class in the Inspector.
-- **[TabGroup]**, **[HorizontalGroup]**, **[VerticalGroup]**, **[BoxGroup]**, **[Foldout]** attributes.
+- **[TabGroup]**, **[HorizontalGroup]**, **[VerticalGroup]**, **[BoxGroup]**, **[Foldout]** grouping attributes.
 - **Nested groups:** You can nest any group inside any other group.
-  - **Lazy defining of nested groups:** Define nested groups like `[BoxGroup("X/Y")]` and specify groups like `[HorizontalGroup("X")]` later.
+  - **Lazy defining of nested groups:** Define nested groups like `[BoxGroup("X/Y")]` and specify parent group type later, with e.g. `[HorizontalGroup("X")]`.
 - **Ordering as in code:** Paid special attention to ensuring that the ordering of fields, properties, and methods (buttons) is as close as possible to their order in the source code file.
 That means that buttons defined next to a field will be displayed next to that field in the inspector.
 - **Dynamic Text** - You can use formula inside text. That formula can use local **fields** and **properties**, which are treated as variables, or even call local **methods**, which are treated as functions.
@@ -22,6 +22,17 @@ That means that buttons defined next to a field will be displayed next to that f
 - **NiceEditorWindow** - You can create custom editor windows by extending `NiceEditorWindow` class.
 That way you don't even have to create `OnGUI()` method - just create fields and properties like you would for any other class, and they will be displayed in the editor window.
 
+- **Generic [Group]** - if you have multiple variables in the same group, then all of them
+except one can use [Group] as a generic placeholder for a group, and just one of them needs
+to use [HorizontalGroup], [VerticalGroup], [TabGroup], or any other grouping type, to define the actual group type.
+
+Example:
+
+[Group("A")] int a, b;
+[Group("A")] string c;
+[HorizontalGroup("A")] float d;
+In this example, all the variables a, b, c and d will be grouped together. The group type is defined by the HorizontalGroup attribute on the variable d.
+And if we want to switch the whole group to another type, we just need to change the HorizontalGroup attribute to VerticalGroup, TabGroup, or any other group type.
 
 TODO:
 - GenericGroup

@@ -14,12 +14,12 @@ namespace NiceAttributes
 #if UNITY_EDITOR
         int lastItemsDrawn = 0, lastStartId;
 
-        public override bool OnGUI_GroupStart()
+        private protected override bool OnGUI_GroupStart()
         {
             var rect = EditorGUILayout.BeginHorizontal();
 
             // Fill the background, if set
-            if( BackColor != ColorNotSet ) DrawingUtil.FillRect( rect, BackColor.ToColor() );
+            if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( rect, GroupBackColor.ToColor() );
 
             lastStartId = GUIUtility.GetControlID( FocusType.Passive );
 
@@ -33,21 +33,18 @@ namespace NiceAttributes
                 //Debug.Log( $"w: {w:0.#}; sW: {EditorGUIUtility.currentViewWidth:0.#}; rW: {rect.width:0.#}, items: {lastItemsDrawn}" );
             }
 
-            SetLabelAndFieldWidth();
-
 
             // Show the label
-            var label = Label ?? GroupName;
+            var label = Title ?? GroupName;
             if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, true, this );
             return true;
         }
 
-        public override void OnGUI_GroupEnd()
+        private protected override void OnGUI_GroupEnd()
         {
             // Calculate number of items drawn by using ControlID - it increases with each control drawn
             lastItemsDrawn = GUIUtility.GetControlID( FocusType.Passive ) - lastStartId;
 
-            RestoreLabelAndFieldWidth();
             EditorGUILayout.EndHorizontal();
         }
 #endif

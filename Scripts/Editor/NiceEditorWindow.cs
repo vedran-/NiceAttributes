@@ -6,6 +6,8 @@ namespace NiceAttributes.Editor
     [Serializable]
     public abstract class NiceEditorWindow : EditorWindow
     {
+        protected virtual bool DrawInspector { get; } = true;
+        
         private ClassContext rootClass;
 
         protected virtual void OnPreGUI() {}
@@ -14,6 +16,8 @@ namespace NiceAttributes.Editor
         #region OnEnable()
         protected virtual void OnEnable()
         {
+            if( !DrawInspector ) return;
+            
             var additionalSkipTypes = new Type[]
             {
                 typeof(NiceEditorWindow),
@@ -38,7 +42,7 @@ namespace NiceAttributes.Editor
         {
             OnPreGUI();
 
-            if( rootClass != null )
+            if( rootClass != null && DrawInspector )
             {
                 // Draw our custom Inspector
                 rootClass.Draw();

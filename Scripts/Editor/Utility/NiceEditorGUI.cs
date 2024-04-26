@@ -189,14 +189,16 @@ namespace NiceAttributes.Editor
         {
             var value = property.GetValue(target, null);
             var label = new GUIContent( ObjectNames.NicifyVariableName(property.Name) );
-            if( !Field_Layout( value, property.PropertyType, label, out var outValue ) )
+            if( !Field_Layout( value, property.PropertyType, label, !property.CanWrite, out var outValue ) )
             {
                 var warning = $"{nameof(ShowAttribute)} doesn't support {property.PropertyType.Name} types";
                 HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
                 return;
             }
-            
-            property.SetValue(target, outValue, null);
+
+            if( property.CanWrite ) {
+                property.SetValue(target, outValue, null);
+            }
         }
         #endregion NativeProperty_Layout()
 
@@ -205,7 +207,7 @@ namespace NiceAttributes.Editor
         {
             var value = field.GetValue( target );
             var label = new GUIContent( ObjectNames.NicifyVariableName(field.Name) );
-            if( !Field_Layout( value, field.FieldType, label, out var outValue ) )
+            if( !Field_Layout( value, field.FieldType, label, false, out var outValue ) )
             {
                 var warning = $"{nameof(ShowAttribute)} doesn't support {field.FieldType.Name} types";
                 HelpBox_Layout( warning, MessageType.Warning, context: target as UnityEngine.Object );
@@ -324,9 +326,9 @@ namespace NiceAttributes.Editor
 
 
         #region Field_Layout()
-        private static bool Field_Layout( object value, Type valueType, GUIContent label, out object outValue )
+        private static bool Field_Layout( object value, Type valueType, GUIContent label, bool readOnly, out object outValue )
         {
-            using( new EditorGUI.DisabledScope( disabled: false ) )
+            using( new EditorGUI.DisabledScope( disabled: readOnly ) )
             {
                 var isDrawn = true;
                 if( valueType == typeof( bool ) )

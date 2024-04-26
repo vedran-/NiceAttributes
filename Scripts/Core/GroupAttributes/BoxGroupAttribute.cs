@@ -15,25 +15,24 @@ namespace NiceAttributes
 
 #if UNITY_EDITOR
         Rect drawRect;
-        public override bool OnGUI_GroupStart()
+
+        private protected override bool OnGUI_GroupStart()
         {
             drawRect = UnityEditor.EditorGUILayout.BeginVertical( GUI.skin.box );
-            SetLabelAndFieldWidth();
 
             // Fill the background, if set
-            if( BackColor != ColorNotSet ) DrawingUtil.FillRect( drawRect, BackColor.ToColor() );
+            if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( drawRect, GroupBackColor.ToColor() );
 
 
             // Show the label
-            var label = Label ?? GroupName;
+            var label = Title ?? GroupName;
             if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
 
             return true;
         }
 
-        public override void OnGUI_GroupEnd()
+        private protected override void OnGUI_GroupEnd()
         {
-            RestoreLabelAndFieldWidth();
             UnityEditor.EditorGUILayout.EndVertical();
 
             // Draw bounding rect

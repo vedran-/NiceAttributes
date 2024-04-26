@@ -8,12 +8,12 @@ namespace NiceAttributes
 
         public string   GroupName { get; private set; }
 
-        public string   Label { get; set; } = null;
+        public string   Title { get; set; } = null;
         public bool     ShowLabel { get; set; } = false;
-        public EColor   LabelColor { get; set; } = ColorNotSet;
-        public EColor   LabelShadowColor { get; set; } = ColorNotSet;
-        public EColor   LabelBackColor { get; set; } = ColorNotSet;
-        public EColor   BackColor { get; set; } = ColorNotSet;
+        public EColor   TitleColor { get; set; } = ColorNotSet;
+        public EColor   TitleShadowColor { get; set; } = ColorNotSet;
+        public EColor   TitleBackColor { get; set; } = ColorNotSet;
+        public EColor   GroupBackColor { get; set; } = ColorNotSet;
 
         public float    InsideLabelWidth { get; set; } = 0;
         public float    InsideFieldWidth { get; set; } = 0;
@@ -29,21 +29,40 @@ namespace NiceAttributes
         /// <summary>
         /// GUI code to apply when this group starts.
         /// </summary>
-        /// <returns>Returns true if group can be drawn, or false if not to draw the group.</returns>
-        public abstract bool OnGUI_GroupStart();
+        /// <returns>Returns true if group can be drawn, or false if not to draw the group elements.</returns>
+        private protected abstract bool OnGUI_GroupStart();
 
         /// <summary>
         /// GUI code to apply when this group ends.
         /// </summary>
-        public abstract void OnGUI_GroupEnd();
+        private protected abstract void OnGUI_GroupEnd();
 
+
+        #region [API] StartDrawingGroup()
+        public bool StartDrawingGroup()
+        {
+            SetLabelAndFieldWidth();
+            
+            return OnGUI_GroupStart();
+        }
+        #endregion [API] StartDrawingGroup()
+
+        #region [API] FinishDrawingGroup()
+        public void FinishDrawingGroup()
+        {
+            OnGUI_GroupEnd();
+            RestoreLabelAndFieldWidth();
+        }
+        #endregion [API] FinishDrawingGroup()
+        
+        
 
         #region [Util] SetLabelAndFieldWidth()
         float originalLabelWidth = 0, originalFieldWidth = 0;
         /// <summary>
         /// NOTE: It has to be called AFTER call to BeginHorizontal or BeginVertical, as those also change label and field width
         /// </summary>
-        protected void SetLabelAndFieldWidth()
+        private void SetLabelAndFieldWidth()
         {
             originalLabelWidth = EditorGUIUtility.labelWidth;
             originalFieldWidth = EditorGUIUtility.fieldWidth;
@@ -55,7 +74,7 @@ namespace NiceAttributes
         #endregion SetLabelAndFieldWidth()
 
         #region [Util] RestoreLabelAndFieldWidth()
-        protected void RestoreLabelAndFieldWidth()
+        private void RestoreLabelAndFieldWidth()
         {
             // Reset to default to avoid affecting other Editor GUI elements
             if( InsideLabelWidth != 0 ) EditorGUIUtility.labelWidth = originalLabelWidth;

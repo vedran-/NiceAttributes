@@ -11,22 +11,20 @@ namespace NiceAttributes
             : base( groupName, lineNumber ) {}
 
 #if UNITY_EDITOR
-        public override bool OnGUI_GroupStart()
+        private protected override bool OnGUI_GroupStart()
         {
             var rect = EditorGUILayout.BeginVertical();
-            SetLabelAndFieldWidth();
 
             // Fill the background, if set
-            if( BackColor != ColorNotSet ) DrawingUtil.FillRect( rect, BackColor.ToColor() );
+            if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( rect, GroupBackColor.ToColor() );
 
-            var label = Label ?? GroupName;
+            var label = Title ?? GroupName;
             if( ShowLabel && !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
             return true;
         }
 
-        public override void OnGUI_GroupEnd()
+        private protected override void OnGUI_GroupEnd()
         {
-            RestoreLabelAndFieldWidth();
             EditorGUILayout.EndVertical();
         }
 #endif
