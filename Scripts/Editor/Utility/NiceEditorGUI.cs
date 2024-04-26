@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using UnityEditor;
@@ -331,18 +332,31 @@ namespace NiceAttributes.Editor
             using( new EditorGUI.DisabledScope( disabled: readOnly ) )
             {
                 var isDrawn = true;
-                if( valueType == typeof( bool ) )
+                
+                if( typeof( UnityEngine.Object ).IsAssignableFrom( valueType ) )
+                {
+                    outValue = EditorGUILayout.ObjectField( label, (UnityEngine.Object)value, valueType, true );
+                } else if( valueType == typeof( int ) )
+                {
+                    outValue = EditorGUILayout.IntField( label, (int)value );
+                } else if( valueType == typeof( bool ) )
                 {
                     outValue = EditorGUILayout.Toggle( label, (bool)value );
+                } else if( valueType == typeof( string ) )
+                {
+                    outValue = EditorGUILayout.TextField( label, (string)value );
+                } else if( valueType == typeof( float ) )
+                {
+                    outValue = EditorGUILayout.FloatField( label, (float)value );
+                } else if( valueType == typeof( double ) )
+                {
+                    outValue = EditorGUILayout.DoubleField( label, (double)value );
                 } else if( valueType == typeof( short ) )
                 {
                     outValue = EditorGUILayout.IntField( label, (short)value );
                 } else if( valueType == typeof( ushort ) )
                 {
                     outValue = EditorGUILayout.IntField( label, (ushort)value );
-                } else if( valueType == typeof( int ) )
-                {
-                    outValue = EditorGUILayout.IntField( label, (int)value );
                 } else if( valueType == typeof( uint ) )
                 {
                     outValue = EditorGUILayout.LongField( label, (uint)value );
@@ -357,18 +371,9 @@ namespace NiceAttributes.Editor
                         outValue = outVal;
                     } else
                     {
-                        HelpBox_Layout( $"Invalid value '{val}'", MessageType.Warning );
+                        //HelpBox_Layout( $"Invalid value '{val}'", MessageType.Warning );
                         outValue = value;   // Don't change input value
                     }
-                } else if( valueType == typeof( float ) )
-                {
-                    outValue = EditorGUILayout.FloatField( label, (float)value );
-                } else if( valueType == typeof( double ) )
-                {
-                    outValue = EditorGUILayout.DoubleField( label, (double)value );
-                } else if( valueType == typeof( string ) )
-                {
-                    outValue = EditorGUILayout.TextField( label, (string)value );
                 } else if( valueType == typeof( Vector2 ) )
                 {
                     outValue = EditorGUILayout.Vector2Field( label, (Vector2)value );
@@ -396,15 +401,15 @@ namespace NiceAttributes.Editor
                 } else if( valueType == typeof( RectInt ) )
                 {
                     outValue = EditorGUILayout.RectIntField( label, (RectInt)value );
-                } else if( typeof( UnityEngine.Object ).IsAssignableFrom( valueType ) )
-                {
-                    outValue = EditorGUILayout.ObjectField( label, (UnityEngine.Object)value, valueType, true );
                 } else if( valueType.BaseType == typeof( Enum ) )
                 {
                     outValue = EditorGUILayout.EnumPopup( label, (Enum)value );
                 } else if( valueType.BaseType == typeof( TypeInfo ) )
                 {
                     outValue = EditorGUILayout.TextField( label, value.ToString() );
+                } else if( typeof(ICollection).IsAssignableFrom(valueType) )
+                {
+                    (isDrawn, outValue) = HandleCollection( value, label );
                 } else
                 {
                     isDrawn = false;
@@ -416,7 +421,64 @@ namespace NiceAttributes.Editor
         }
         #endregion Field_Layout()
 
+        private static bool foldedOut = true;
+        private static (bool isDrawn, object outValue) HandleCollection( object value, GUIContent label )
+        {
+            var valueType = value.GetType();
+            var array = valueType.IsArray ? (Array)value : null;
+            var genericCollection = valueType.IsGenericType ? value as ICollection : null;
 
+            var length = array != null ? array.Length 
+                : genericCollection != null ? genericCollection.Count : -1;
+
+            if( length < 0 )
+            {
+                HelpBox_Layout($"Invalid ICollection type '{valueType.Name}'", MessageType.Error);
+                return (false, value);
+            }
+
+            var folded = EditorGUILayout.Foldout( foldedOut, label, true );
+            if( folded != foldedOut ) { // Value changed
+                foldedOut = folded;
+                //EditorPrefs.SetBool( id, folded );
+            }
+            if( !foldedOut ) return (true, value);
+            
+            for( int i = 0; i < length; i++ )
+            {
+                var item = array != null ? array.GetValue(i) : genericCollection.Cast<object>().ElementAt(i);
+
+                if( Field_Layout( item, item.GetType(), new GUIContent($"Element {i}"), false, out var outValue ) )
+                {
+                    // Set new value
+                    if( outValue != value )
+                    {
+                        if( array != null ) array.SetValue( outValue, i );
+                        else if( genericCollection != null )
+                        {
+                            if( genericCollection is IList list )
+                            {
+                                list[i] = outValue;
+                            } else {
+                                var tempCollection = Activator.CreateInstance(valueType, true);
+                                var addMethod = valueType.GetMethod("Add");
+                                var count = 0;
+                                foreach( var element in genericCollection )
+                                {
+                                    addMethod.Invoke( tempCollection, new[] { count == i ? outValue : element } ); 
+                                    count++;
+                                }
+                                genericCollection = tempCollection as ICollection;
+                            }
+                        }
+                    }
+                }
+            }
+            
+            return (true, value);
+        }
+
+        
         #region GetIndentLength()
         public static float GetIndentLength( Rect sourceRect )
         {
