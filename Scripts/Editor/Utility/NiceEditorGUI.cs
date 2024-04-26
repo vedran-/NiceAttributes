@@ -430,6 +430,8 @@ namespace NiceAttributes.Editor
 
             var length = array != null ? array.Length 
                 : genericCollection != null ? genericCollection.Count : -1;
+            
+            var elementType = valueType.GetElementType();
 
             if( length < 0 )
             {
@@ -448,28 +450,27 @@ namespace NiceAttributes.Editor
             {
                 var item = array != null ? array.GetValue(i) : genericCollection.Cast<object>().ElementAt(i);
 
-                if( Field_Layout( item, item.GetType(), new GUIContent($"Element {i}"), false, out var outValue ) )
+                if( Field_Layout( item, elementType, new GUIContent($"Element {i}"), false, out var outValue ) )
                 {
                     // Set new value
-                    if( outValue != value )
+                    if( outValue == value ) continue;
+
+                    if( array != null ) array.SetValue( outValue, i );
+                    else if( genericCollection != null )
                     {
-                        if( array != null ) array.SetValue( outValue, i );
-                        else if( genericCollection != null )
+                        if( genericCollection is IList list )
                         {
-                            if( genericCollection is IList list )
+                            list[i] = outValue;
+                        } else {
+                            var tempCollection = Activator.CreateInstance(valueType, true);
+                            var addMethod = valueType.GetMethod("Add");
+                            var count = 0;
+                            foreach( var element in genericCollection )
                             {
-                                list[i] = outValue;
-                            } else {
-                                var tempCollection = Activator.CreateInstance(valueType, true);
-                                var addMethod = valueType.GetMethod("Add");
-                                var count = 0;
-                                foreach( var element in genericCollection )
-                                {
-                                    addMethod.Invoke( tempCollection, new[] { count == i ? outValue : element } ); 
-                                    count++;
-                                }
-                                genericCollection = tempCollection as ICollection;
+                                addMethod.Invoke( tempCollection, new[] { count == i ? outValue : element } ); 
+                                count++;
                             }
+                            genericCollection = tempCollection as ICollection;
                         }
                     }
                 }

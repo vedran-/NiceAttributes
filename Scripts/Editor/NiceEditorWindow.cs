@@ -1,5 +1,6 @@
 using System;
 using UnityEditor;
+using UnityEngine;
 
 namespace NiceAttributes.Editor
 {
@@ -9,6 +10,7 @@ namespace NiceAttributes.Editor
         protected virtual bool DrawInspector { get; } = true;
         
         private ClassContext rootClass;
+        private Vector2 scrollPosition;
 
         protected virtual void OnPreGUI() {}
         protected virtual void OnPostGUI() {}
@@ -44,8 +46,12 @@ namespace NiceAttributes.Editor
 
             if( rootClass != null && DrawInspector )
             {
+                scrollPosition = EditorGUILayout.BeginScrollView( scrollPosition );
+
                 // Draw our custom Inspector
                 rootClass.Draw();
+                
+                EditorGUILayout.EndScrollView();
             }
 
             OnPostGUI();
