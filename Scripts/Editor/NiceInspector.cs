@@ -2,7 +2,7 @@
 
 namespace NiceAttributes.Editor
 {
-#if DONT_USE_NICE_INSPECTOR
+#if !DONT_USE_NICE_INSPECTOR
     [CanEditMultipleObjects]
     [CustomEditor(typeof(UnityEngine.Object), true)]
 #endif
