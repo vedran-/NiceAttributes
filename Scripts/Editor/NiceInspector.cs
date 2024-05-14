@@ -2,8 +2,10 @@
 
 namespace NiceAttributes.Editor
 {
+#if DONT_USE_NICE_INSPECTOR
     [CanEditMultipleObjects]
     [CustomEditor(typeof(UnityEngine.Object), true)]
+#endif
     public class NiceInspector : UnityEditor.Editor
     {
         ClassContext    rootClass;
