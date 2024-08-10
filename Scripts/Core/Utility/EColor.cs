@@ -22,8 +22,5 @@ namespace NiceAttributes
     }
 
 #if UNITY_EDITOR
-    public static class EColorExtensions
-    {
-    }
 #endif
 }

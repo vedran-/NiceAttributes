@@ -3,22 +3,6 @@ using System.Runtime.CompilerServices;
 
 namespace NiceAttributes
 {
-    public enum ButtonEnableMode
-    {
-        /// <summary>
-        /// Button should always be active
-        /// </summary>
-        Always,
-        /// <summary>
-        /// Button should be active only in editor
-        /// </summary>
-        Editor,
-        /// <summary>
-        /// Button should be active only in playmode
-        /// </summary>
-        Playmode
-    }
-
     [AttributeUsage( AttributeTargets.Method, AllowMultiple = false, Inherited = true )]
     public class ButtonAttribute : SpecialCaseDrawerAttribute
     {

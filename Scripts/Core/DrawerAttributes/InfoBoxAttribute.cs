@@ -3,8 +3,6 @@ using System.Runtime.CompilerServices;
 
 namespace NiceAttributes
 {
-    public enum InfoBoxType { Info, Warning, Error }
-
     [AttributeUsage( AttributeTargets.Field, AllowMultiple = true, Inherited = true )]
     public class InfoBoxAttribute : DrawerAttribute
     {
