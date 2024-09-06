@@ -9,8 +9,8 @@ namespace NiceAttributes.Editor
     {
         protected virtual bool DrawInspector { get; } = true;
         
-        private ClassContext rootClass;
-        private Vector2 scrollPosition;
+        private ClassContext _rootClass;
+        private Vector2 _scrollPosition;
 
         protected virtual void OnPreGUI() {}
         protected virtual void OnPostGUI() {}
@@ -27,7 +27,7 @@ namespace NiceAttributes.Editor
             };
 
             var type = this.GetType();
-            rootClass = ClassContext.CreateContext( type, this, 0, additionalSkipTypes, true );
+            _rootClass = ClassContext.CreateContext( type, this, 0, additionalSkipTypes, true );
         }
         #endregion OnEnable()
 
@@ -44,12 +44,12 @@ namespace NiceAttributes.Editor
         {
             OnPreGUI();
 
-            if( rootClass != null && DrawInspector )
+            if( _rootClass != null && DrawInspector )
             {
-                scrollPosition = EditorGUILayout.BeginScrollView( scrollPosition );
+                _scrollPosition = EditorGUILayout.BeginScrollView( _scrollPosition );
 
                 // Draw our custom Inspector
-                rootClass.Draw();
+                _rootClass.Draw();
                 
                 EditorGUILayout.EndScrollView();
             }

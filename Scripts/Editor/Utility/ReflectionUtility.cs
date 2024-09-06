@@ -124,5 +124,39 @@ namespace NiceAttributes.Editor
 
             return types;
         }
+        
+        internal static readonly Type[] UnitySpecialTypes = new Type[]
+        {
+            typeof(Vector2),
+            typeof(Vector3),
+            typeof(Vector4),
+            typeof(Quaternion),
+            typeof(Matrix4x4),
+            typeof(Color),
+            typeof(Color32),
+            typeof(Rect),
+            typeof(RectInt),
+            typeof(Bounds),
+            typeof(BoundsInt),
+            typeof(LayerMask),
+            typeof(AnimationCurve),
+            typeof(Gradient),
+            typeof(Transform),
+            typeof(Sprite),
+            typeof(Texture),
+            typeof(Texture2D),
+            typeof(Shader),
+            typeof(Material),
+            typeof(Animator),
+            typeof(RuntimeAnimatorController),
+            typeof(AudioClip),
+            typeof(Rigidbody),
+            typeof(Rigidbody2D),
+            typeof(Collider),
+            typeof(Collider2D),
+            typeof(Mesh),
+            typeof(ParticleSystem),
+            typeof(Font)
+        };
     }
 }

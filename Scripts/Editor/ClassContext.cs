@@ -130,7 +130,8 @@ namespace NiceAttributes.Editor
                 {
                     isVisible = Attribute.IsDefined( fieldType, typeof( SerializableAttribute ) )
                         || Attribute.IsDefined( fieldType, typeof( ShowAttribute ) )
-                        || fieldType.IsSubclassOfRawGeneric( typeof( UnityEngine.Object ) );
+                        || fieldType.IsSubclassOfRawGeneric( typeof( UnityEngine.Object ) )
+                        || ReflectionUtility.UnitySpecialTypes.Any(t => t == fieldType);
                 }
             }
             return isVisible;

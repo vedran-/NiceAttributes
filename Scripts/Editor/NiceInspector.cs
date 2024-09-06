@@ -1,4 +1,6 @@
-﻿using UnityEditor;
+﻿using System;
+using UnityEditor;
+using UnityEngine;
 
 namespace NiceAttributes.Editor
 {
@@ -13,9 +15,17 @@ namespace NiceAttributes.Editor
         #region OnEnable()
         protected virtual void OnEnable()
         {
-            rootClass = ClassContext.CreateContext( target.GetType(), serializedObject.targetObject, 0 );
-            if( rootClass.HasNiceAttributes ) {
-                ClassContext.ConnectWithSerializedProperties( rootClass, serializedObject.GetIterator() );
+            try
+            {
+                rootClass = ClassContext.CreateContext(target.GetType(), serializedObject.targetObject, 0);
+                if (rootClass.HasNiceAttributes)
+                {
+                    ClassContext.ConnectWithSerializedProperties(rootClass, serializedObject.GetIterator());
+                }
+            }
+            catch (Exception ex)
+            {
+                Debug.LogException(ex);
             }
         }
         #endregion OnEnable()
