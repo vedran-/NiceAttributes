@@ -215,7 +215,12 @@ namespace NiceAttributes.Editor
                 return;
             }
 
-            field.SetValue(target, outValue);
+            if (outValue != value)
+            {
+                // TODO: Trigger changed value event
+                
+                field.SetValue(target, outValue);
+            }
         }
         #endregion NonSerializedField_Layout()
 
@@ -332,6 +337,12 @@ namespace NiceAttributes.Editor
             using( new EditorGUI.DisabledScope( disabled: readOnly ) )
             {
                 var isDrawn = true;
+
+                if (valueType == null)
+                {
+                    outValue = null;
+                    return false;
+                }
                 
                 if( typeof( UnityEngine.Object ).IsAssignableFrom( valueType ) )
                 {

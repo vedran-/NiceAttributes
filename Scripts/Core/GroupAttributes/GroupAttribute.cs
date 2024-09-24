@@ -14,6 +14,7 @@ namespace NiceAttributes
         public GroupAttribute( string groupName = "", [CallerLineNumber] int lineNumber = 0 ) 
             : base( groupName, lineNumber ) {}
 
+#if UNITY_EDITOR
         private protected override bool OnGUI_GroupStart()
         {
             Debug.LogError($"Group attribute on '{GroupName}' can't be used directly. Use {nameof(VerticalGroupAttribute)}, {nameof(HorizontalGroupAttribute)} or any other grouping attributes instead.");
@@ -24,5 +25,6 @@ namespace NiceAttributes
         private protected override void OnGUI_GroupEnd()
         {
         }
+#endif
     }
 }
