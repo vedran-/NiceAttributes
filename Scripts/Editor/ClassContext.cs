@@ -634,6 +634,37 @@ namespace NiceAttributes.Editor
                 //EditorGUILayout.HelpBox( item.errorMessage, MessageType.Error );
             }
 
+            List<string> preDrawList = null, postDrawList = null;
+            if(item.serializedProperty == null && item.niceAttributes.Length > 0)
+            {
+                foreach( var niceAttribute in item.niceAttributes )
+                {
+                    if (niceAttribute is OnGUIAttribute onGuiAttribute)
+                    {
+                        if( !string.IsNullOrWhiteSpace(onGuiAttribute.PreDrawMethodName) )
+                        {
+                            preDrawList ??= new List<string>();
+                            preDrawList.Add( onGuiAttribute.PreDrawMethodName );
+                        }
+                        if( !string.IsNullOrWhiteSpace(onGuiAttribute.PostDrawMethodName) )
+                        {
+                            postDrawList ??= new List<string>();
+                            postDrawList.Add( onGuiAttribute.PostDrawMethodName );
+                        }
+                    }
+                }
+            }
+
+            if (preDrawList != null)
+            {
+                // Call pre-draw methods
+                foreach (var methodName in preDrawList)
+                {
+                    OnGUIPropertyDrawer.RunGUIMethod(targetObject, methodName);
+                }
+            }
+            
+            
             if( item.classContext != null )                 // *** Class or Struct with expanded view
             {
                 if( item.serializedProperty != null ) {         // Draw class foldout
@@ -677,6 +708,15 @@ namespace NiceAttributes.Editor
                 }
             }
 
+            if (postDrawList != null)
+            {
+                // Call post-draw methods
+                foreach (var methodName in postDrawList)
+                {
+                    OnGUIPropertyDrawer.RunGUIMethod(targetObject, methodName);
+                }
+            }
+            
             EditorGUILayout.EndVertical();
         }
         #endregion DrawItem()

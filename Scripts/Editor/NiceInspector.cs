@@ -15,6 +15,11 @@ namespace NiceAttributes.Editor
         #region OnEnable()
         protected virtual void OnEnable()
         {
+            if (target == null)
+            {
+                return;
+            }
+
             try
             {
                 rootClass = ClassContext.CreateContext(target.GetType(), serializedObject.targetObject, 0);

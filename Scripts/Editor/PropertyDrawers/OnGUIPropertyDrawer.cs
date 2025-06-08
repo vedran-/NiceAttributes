@@ -4,7 +4,7 @@ using System.Reflection;
 
 namespace NiceAttributes.Editor
 {
-    [CustomPropertyDrawer( typeof( OnGUIAttribute ) )]
+    [CustomPropertyDrawer( typeof( OnGUIAttribute ), true )]
     public class OnGUIPropertyDrawer : PropertyDrawerBase
     {
         #region RunGUIMethod()
