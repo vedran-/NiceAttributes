@@ -7,58 +7,23 @@ using UnityEngine;
 
 namespace NiceAttributes.Editor
 {
-    public class ClassContext
+    public partial class ClassContext
     {
+        private const BindingFlags AllBindingFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
+        private static readonly Type[] SkipTypes = new Type[] { typeof(UnityEngine.Object), typeof(ScriptableObject), typeof(MonoBehaviour) };
+        private static readonly Color BgNonSerialized = Color.Lerp(DrawingUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f);
+        
         public bool             HasNiceAttributes { get; private set; } = false;
 
-        private List<ClassItem> members = new();
-        private object          targetObject;
-        private int             indentLevel;
+        private List<ClassItem> _displayedMembers = null;
+        private object          _targetObject;
+        private int             _indentLevel;
 
-
-        #region class ClassItem
-        public class ClassItem
-        {
-            public MemberInfo           memberInfo;
-            public INiceAttribute[]     niceAttributes;
-            public float                lineNumber;             // Line number in source code
-
-            public GroupInfo            group;                  // To which group does item belong
-            public SerializedProperty   serializedProperty = null;  // If item is serialized, this will be set
-            public string               errorMessage = null;    // Used to display warnings/errors to user
-            public bool                 foldedOut = true;       // For non-serialized members, we have to track if they're folded
-
-            /// <summary>
-            /// If member is a class or struct, it can have its own context for displaying its children.
-            /// Othewise it will be null.
-            /// </summary>
-            public ClassContext         classContext = null;
-        }
-        #endregion class ClassItem
-
-        #region class GroupInfo
-        public class GroupInfo
-        {
-            public string               groupName;
-            public BaseGroupAttribute   groupAttribute = null;
-            public GroupInfo[]          groups; // List of all groups this group belongs to - including itself
-            internal TabGroupAttribute.TabParent tabParent;
-
-            public GroupInfo( string name ) { groupName = name; }
-
-            internal GroupInfo GetParentGroup()
-            {
-                if( groups.Length < 2 ) return null;
-                return groups[^2];
-            }
-        }
-        #endregion class GroupInfo
 
         // Private constructor - call CreateContext() to create a new instance
         private ClassContext() {}
 
 
-        #region [API] CreateContext()
         /// <summary>
         /// Get all members of the class and all its base classes.
         /// It also recursively visits subclasses/substructs
@@ -68,118 +33,82 @@ namespace NiceAttributes.Editor
         /// <param name="indentLevel"></param>
         /// <param name="additionalSkipTypes"></param>
         /// <param name="alwaysUseNiceInspector">If set, it will always use NiceAttribute's Inspector, even if there are not NiceAttributes used in the class</param>
-        public static ClassContext CreateContext( Type classType, object targetObject, int indentLevel,
-            Type[] additionalSkipTypes = null, bool alwaysUseNiceInspector = false )
+        public static ClassContext CreateContext(Type classType, object targetObject, int indentLevel,
+            Type[] additionalSkipTypes = null, bool alwaysUseNiceInspector = false)
         {
             var ctx = new ClassContext();
-            if( alwaysUseNiceInspector ) ctx.HasNiceAttributes = true;
-            ctx.targetObject = targetObject;
-            ctx.indentLevel = indentLevel;
+            if (alwaysUseNiceInspector) ctx.HasNiceAttributes = true;
+            ctx._targetObject = targetObject;
+            ctx._indentLevel = indentLevel;
 
             // Get all class members
             // NOTE: it can call CreateContext() on any field which we want to display expanded (e.g. non-serialized class with [Show] attribute)
-            ctx.GetAllMembers( classType, additionalSkipTypes );
+            var members = ctx.GetAllMembers(classType, additionalSkipTypes);
 
             //Debug.Log( $"All members {ctx.hasNiceAttributes} for {classType.Name}:\n - " + string.Join( "\n - ", ctx.members.Select( m => $"{m.memberInfo} - {m.memberInfo.GetInterfaceAttributes<INiceAttribute>().FirstOrDefault()?.LineNumber} >> [{ string.Join( ", ", m.niceAttributes.Select( a => a.GetType() ) )}]" ) ) );
 
             // If class (or its subclasses) don't have any INiceAttribute, stop further processing
             // - we'll then use default inspector instead of our anyhow
-            if( !ctx.HasNiceAttributes ) return ctx;
+            if (!ctx.HasNiceAttributes) return ctx;
 
             // Order class members, as they appear in the source code file
-            var orderedMembers = ctx.GetOrderedMembersByLineNumber();
+            var orderedMembers = GetOrderedMembersByLineNumber(members);
 
-            var groups = ctx.BuildDisplayTree( orderedMembers );
+            var displayTree = BuildDisplayTree(orderedMembers);
+            ctx._displayedMembers = displayTree.members;
 
-            ctx.InitializeTabGroups( groups );
+            InitializeTabGroups(displayTree.groups);
 
             return ctx;
         }
-        #endregion CreateContext()
 
 
-        #region IsPropertySerialized Helper
-        /// <summary>
-        /// Checks if a property is serialized by Unity, either via [SerializeField] on the property itself
-        /// or, more commonly, via [SerializeField] or [field: SerializeField] on its compiler-generated backing field.
-        /// </summary>
-        private static bool IsPropertySerialized(PropertyInfo propInfo)
+        private bool IsVisible(MemberInfo mt)
         {
-            // Properties themselves aren't typically marked [SerializeField], but check just in case.
-            // The common case is the backing field.
-            if (Attribute.IsDefined(propInfo, typeof(SerializeField)))
-            {
-                return true;
-            }
-
-            // Auto-properties generate a backing field named "<PropertyName>k__BackingField"
-            var backingFieldName = $"<{propInfo.Name}>k__BackingField";
-            // Important: Check DeclaredOnly first, as backing fields are defined in the property's declaring type.
-            var backingField = propInfo.DeclaringType?.GetField(backingFieldName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
-
-            // If not found directly, maybe inheritance is involved (less common for backing fields)
-            // but let's search the hierarchy just to be safe.
-            if (backingField == null)
-            {
-                backingField = propInfo.DeclaringType?.GetField(backingFieldName, BindingFlags.Instance | BindingFlags.NonPublic);
-            }
-
-            // Check if the found backing field has [SerializeField]
-            if (backingField != null && Attribute.IsDefined(backingField, typeof(SerializeField)))
-            {
-                return true;
-            }
-
-            // Not serialized via standard mechanisms NiceAttributes should care about.
-            return false;
-        }
-        #endregion
-
-        #region IsVisible()
-        private bool IsVisible( MemberInfo mt )
-        {
-            if( Attribute.IsDefined( mt, typeof( HideAttribute ) ) )
+            if (Attribute.IsDefined(mt, typeof(HideAttribute)))
             {
                 HasNiceAttributes = true;
                 return false;
             }
 
-            if( mt.MemberType == MemberTypes.Property ) return Attribute.IsDefined( mt, typeof( ShowAttribute ) ) || IsPropertySerialized(mt as PropertyInfo);
-            if( mt.MemberType == MemberTypes.Method ) return Attribute.IsDefined( mt, typeof( ButtonAttribute ) );
-            if( mt is not FieldInfo fi ) return false;
+            if (mt.MemberType == MemberTypes.Property)
+            {
+                return Attribute.IsDefined(mt, typeof(ShowAttribute))
+                       || ReflectionUtility.IsPropertySerialized(mt as PropertyInfo);
+            }
+            if (mt.MemberType == MemberTypes.Method) return Attribute.IsDefined(mt, typeof(ButtonAttribute));
+            if (mt is not FieldInfo fi) return false;
 
             // Field
-            //var fi = mt as FieldInfo;
-            if( Attribute.IsDefined( fi, typeof( ShowAttribute ) ) ) return true;
-            if( fi.IsStatic ) return false;     // Static fields - not visible
+            if (Attribute.IsDefined(fi, typeof(ShowAttribute))) return true;
+            if (fi.IsStatic) return false; // Static fields - not visible
 
-            var isVisible = (fi.IsPublic && !Attribute.IsDefined( fi, typeof( NonSerializedAttribute ) ))
-                || Attribute.IsDefined( fi, typeof( SerializeField ) );
+            var isVisible = (fi.IsPublic && !Attribute.IsDefined(fi, typeof(NonSerializedAttribute)))
+                            || Attribute.IsDefined(fi, typeof(SerializeField));
 
             var fieldType = fi.FieldType;
-            if( isVisible )     // Check if basic field type is class or struct
+            if (isVisible)      // Check if basic field type is class or struct
             {
-                if( fieldType.IsArray ) fieldType = fieldType.GetElementType();
-                if( fieldType.IsGenericList() ) fieldType = fieldType.GetGenericArguments()[0];
+                if (fieldType.IsArray) fieldType = fieldType.GetElementType();
+                if (fieldType.IsGenericList()) fieldType = fieldType.GetGenericArguments()[0];
 
                 // Class or struct - only if it has [Serialized] attribute, or if it inherits from ScriptableObject
-                if( fieldType.IsClassOrStruct() )
+                if (fieldType.IsClassOrStruct())
                 {
-                    isVisible = Attribute.IsDefined( fieldType, typeof( SerializableAttribute ) )
-                        || Attribute.IsDefined( fieldType, typeof( ShowAttribute ) )
-                        || fieldType.IsSubclassOfRawGeneric( typeof( UnityEngine.Object ) )
-                        || ReflectionUtility.UnitySpecialTypes.Any(t => t == fieldType);
+                    isVisible = Attribute.IsDefined(fieldType, typeof(SerializableAttribute))
+                                || Attribute.IsDefined(fieldType, typeof(ShowAttribute))
+                                || fieldType.IsSubclassOfRawGeneric(typeof(UnityEngine.Object))
+                                || ReflectionUtility.UnitySpecialTypes.Any(t => t == fieldType);
                 }
             }
+
             return isVisible;
         }
-        #endregion IsVisible()
 
-        #region GetAllMembers()
-        const BindingFlags  AllBindingFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
-        static readonly Type[] SkipTypes = new Type[] { typeof(UnityEngine.Object), typeof(ScriptableObject), typeof(MonoBehaviour) };
-        void GetAllMembers( Type classType, Type[] additionalSkipTypes )
+        private List<ClassItem> GetAllMembers( Type classType, Type[] additionalSkipTypes )
         {
+            var members = new List<ClassItem>();
+            
             // Add all base types to a list - we need their members too, we inherited them!
             var types = new List<Type>() { classType };
             while( types.Last().BaseType != null )
@@ -190,14 +119,15 @@ namespace NiceAttributes.Editor
                 types.Add( bt );
             }
 
-            void AddMember( MemberInfo member, ClassContext memberClassContext )
+            void AddMember(MemberInfo member, ClassContext memberClassContext)
             {
-                var n = new ClassItem() {
+                var n = new ClassItem()
+                {
                     memberInfo = member,
                     niceAttributes = member.GetInterfaceAttributes<INiceAttribute>().ToArray(),
                     classContext = memberClassContext
                 };
-                if( n.niceAttributes.Length > 0 )
+                if (n.niceAttributes.Length > 0)
                 {
                     HasNiceAttributes = true;
                 }
@@ -205,7 +135,7 @@ namespace NiceAttributes.Editor
                 // Get line number in source code from INiceAttribute
                 n.lineNumber = n.niceAttributes.Length > 0 ? n.niceAttributes[0].LineNumber : -1f;
 
-                members.Add( n );
+                members.Add(n);
             }
 
 
@@ -253,13 +183,13 @@ namespace NiceAttributes.Editor
                             // Show expanded view of the class/struct - get all its members in a new class context!
                             if( useExpandedView )
                             {
-                                var obj = propInfo != null ? propInfo.GetValue( targetObject, null )
-                                    : fieldInfo != null ? fieldInfo.GetValue( targetObject )
+                                var obj = propInfo != null ? propInfo.GetValue( _targetObject, null )
+                                    : fieldInfo != null ? fieldInfo.GetValue( _targetObject )
                                     : null;
-                                Debug.Assert( obj != null, $"Object for member {m.Name} is null! Parent object was {targetObject}" );
+                                Debug.Assert( obj != null, $"Object for member {m.Name} is null! Parent object was {_targetObject}" );
 
                                 // Create new context for the sub-class
-                                memberClassContext = CreateContext( memberType, obj, indentLevel + 1 );
+                                memberClassContext = CreateContext( memberType, obj, _indentLevel + 1 );
 
                                 // If sub-class has any Nice attributes, then mark that we have nice attributes
                                 if( memberClassContext.HasNiceAttributes ) HasNiceAttributes = true;
@@ -270,11 +200,11 @@ namespace NiceAttributes.Editor
                     AddMember( m, memberClassContext );
                 }
             }
-        }
-        #endregion GetAllMembers()
 
-        #region GetOrderedMembersByLineNumber()
-        IEnumerable<ClassItem> GetOrderedMembersByLineNumber()
+            return members;
+        }
+
+        private static IEnumerable<ClassItem> GetOrderedMembersByLineNumber(List<ClassItem> members)
         {
             // For members which don't have line numbers, select a number between their neighbours which do have line numbers
             // But make sure that only use neighbours of the same type!
@@ -299,7 +229,7 @@ namespace NiceAttributes.Editor
 
                     float GetNewLineNumber()
                     {
-                        // If no memeber of this type has line number set, return number
+                        // If no member of this type has line number set, return number
                         if( minValue < 0 && maxValue < 0 ) return (int)m.memberInfo.MemberType * 10f;
                         if( minValue < 0 && maxValue >= 0 ) return maxValue - 1f;
                         if( maxValue < 0 && minValue >= 0 ) return minValue + 1f;
@@ -317,10 +247,8 @@ namespace NiceAttributes.Editor
             // Finally, order all members by line numbers
             return members.OrderBy( m => m.lineNumber );
         }
-        #endregion GetOrderedMembersByLineNumber()
 
-        #region BuildDisplayTree()
-        Dictionary<string, GroupInfo> BuildDisplayTree( IEnumerable<ClassItem> orderedMembers )
+        private static (Dictionary<string, GroupInfo> groups, List<ClassItem> members) BuildDisplayTree( IEnumerable<ClassItem> orderedMembers )
         {
             var groups = new Dictionary<string, GroupInfo>();
 
@@ -432,17 +360,10 @@ namespace NiceAttributes.Editor
                 //Debug.Log( $"Item order: " + string.Join( ", ", items.Select( i => $"{i.memberInfo.Name} [{i.group.groupName}]" ) ) );
             }
 
-            // Replace old list with a new list, sorted by groups
-            this.members = items;
-            
-            //Debug.Log("Members by order:\n" + string.Join( "\n", members.Select( m => $"{m.group?.groupName}: {m.memberInfo.Name}" ) ) );
-
-            return groups;
+            return (groups, items);
         }
-        #endregion BuildDisplayTree()
     
-        #region InitializeTabGroups()
-        void InitializeTabGroups( Dictionary<string, GroupInfo> groups )
+        private static void InitializeTabGroups( Dictionary<string, GroupInfo> groups )
         {
             //Debug.Log( "Groups:\n" + string.Join( "\n", groups.Select( g => $"{g.Key} - {g.Value.groupAttribute?.GetType().Name}: {string.Join( ", ", g.Value.groups.Select( gg => gg.groupName ) )}" ) ) );
 
@@ -494,12 +415,11 @@ namespace NiceAttributes.Editor
                 tabAtt.tabParent = parentGroup.tabParent;
             }
 /**/
-            // Next: Reorder members, so all with same Tab parent are next to each other
-            // If not, whole Tab Group can jump from place to place when user switches tabs
+            // TODO Next: Reorder members, so all with same Tab parent are next to each other
+            //   If not, whole Tab Group can jump from place to place when user switches tabs
         }
-        #endregion InitializeTabGroups()
 
-        #region [API] ConnectWithSerializedProperties()
+        
         internal static void ConnectWithSerializedProperties( ClassContext ctx, SerializedProperty property )
         {
             var parentPath = property.propertyPath;
@@ -509,7 +429,7 @@ namespace NiceAttributes.Editor
             {
                 if( !property.propertyPath.StartsWith( parentPath ) ) break;    // Don't go into children of other classes
 
-                var item = ctx.members.FirstOrDefault( d =>
+                var item = ctx._displayedMembers.FirstOrDefault( d =>
                     d.memberInfo != null &&
                     (
                         // Standard match: Field name or direct property name matches SerializedProperty name
@@ -523,7 +443,7 @@ namespace NiceAttributes.Editor
                     if( property.name == "m_Script" )   // Special case - m_Script - insert it as 1st element in list
                     {
                         var mScript = new ClassItem() { serializedProperty = property.Copy() };
-                        ctx.members.Insert( 0, mScript );
+                        ctx._displayedMembers.Insert( 0, mScript );
                     } else
                     {
                         var isHidden = PropertyUtility.GetAttribute<HideAttribute>( property ) != null
@@ -531,7 +451,7 @@ namespace NiceAttributes.Editor
 
                         if( !isHidden ) {
                             // Property was not hidden, so it's strange that we don't have ClassItem for it
-                            Debug.LogError( $"Could not find ClassItem for serialized property {property.name} in {ctx.targetObject}!" );
+                            Debug.LogError( $"Could not find ClassItem for serialized property {property.name} in {ctx._targetObject}!" );
                         }
 
                         //ctx.members.Add( new ClassItem() { serializedProperty = property.Copy() } );
@@ -554,14 +474,12 @@ namespace NiceAttributes.Editor
 
             } while( property.NextVisible( false ) );
         }
-        #endregion ConnectWithSerializedProperties()
 
 
-        #region [API] Draw()
         internal void Draw()
         {
             var oldIndent = EditorGUI.indentLevel;
-            EditorGUI.indentLevel = indentLevel;
+            EditorGUI.indentLevel = _indentLevel;
 
             GroupInfo[] lastOpenGroups = null;
             var hiddenGroups = new List<GroupInfo>();
@@ -642,7 +560,7 @@ namespace NiceAttributes.Editor
             }
             #endregion SetActiveGroups()
 
-            foreach( var item in members )
+            foreach( var item in _displayedMembers )
             {
                 // Check which groups have opened and which have closed
                 var shouldDraw = SetActiveGroups( item.group?.groups );
@@ -658,11 +576,7 @@ namespace NiceAttributes.Editor
 
             EditorGUI.indentLevel = oldIndent;
         }
-        #endregion Draw()
 
-
-        #region DrawItem()
-        static readonly Color BgNonSerialized = Color.Lerp( DrawingUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f );
         private void DrawItem( ClassItem item )
         {
             var itemRect = EditorGUILayout.BeginVertical();
@@ -705,7 +619,7 @@ namespace NiceAttributes.Editor
                 // Call pre-draw methods
                 foreach (var methodName in preDrawList)
                 {
-                    OnGUIPropertyDrawer.RunGUIMethod(targetObject, methodName);
+                    OnGUIPropertyDrawer.RunGUIMethod(_targetObject, methodName);
                 }
             }
             
@@ -743,13 +657,13 @@ namespace NiceAttributes.Editor
                 // Non-serialized members
                 if( item.memberInfo is FieldInfo field )
                 {
-                    NiceEditorGUI.NonSerializedField_Layout( targetObject, field );
+                    NiceEditorGUI.NonSerializedField_Layout( _targetObject, field );
                 } else if( item.memberInfo is PropertyInfo property )
                 {
-                    NiceEditorGUI.NativeProperty_Layout( targetObject, property );
+                    NiceEditorGUI.NativeProperty_Layout( _targetObject, property );
                 } else if( item.memberInfo is MethodInfo method )
                 {
-                    NiceEditorGUI.Button( targetObject, method );
+                    NiceEditorGUI.Button( _targetObject, method );
                 }
             }
 
@@ -758,12 +672,11 @@ namespace NiceAttributes.Editor
                 // Call post-draw methods
                 foreach (var methodName in postDrawList)
                 {
-                    OnGUIPropertyDrawer.RunGUIMethod(targetObject, methodName);
+                    OnGUIPropertyDrawer.RunGUIMethod(_targetObject, methodName);
                 }
             }
             
             EditorGUILayout.EndVertical();
         }
-        #endregion DrawItem()
     }
 }

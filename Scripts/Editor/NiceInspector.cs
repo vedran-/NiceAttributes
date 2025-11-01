@@ -10,9 +10,8 @@ namespace NiceAttributes.Editor
 #endif
     public class NiceInspector : UnityEditor.Editor
     {
-        ClassContext    rootClass;
+        private ClassContext _rootClass;
 
-        #region OnEnable()
         protected virtual void OnEnable()
         {
             if (target == null)
@@ -22,10 +21,10 @@ namespace NiceAttributes.Editor
 
             try
             {
-                rootClass = ClassContext.CreateContext(target.GetType(), serializedObject.targetObject, 0);
-                if (rootClass.HasNiceAttributes)
+                _rootClass = ClassContext.CreateContext(target.GetType(), serializedObject.targetObject, 0);
+                if (_rootClass.HasNiceAttributes)
                 {
-                    ClassContext.ConnectWithSerializedProperties(rootClass, serializedObject.GetIterator());
+                    ClassContext.ConnectWithSerializedProperties(_rootClass, serializedObject.GetIterator());
                 }
             }
             catch (Exception ex)
@@ -33,21 +32,17 @@ namespace NiceAttributes.Editor
                 Debug.LogException(ex);
             }
         }
-        #endregion OnEnable()
 
-        #region OnDisable()
         protected virtual void OnDisable()
         {
             ReorderableListPropertyDrawer.Instance.ClearCache();
         }
-        #endregion OnDisable()
 
 
-        #region OnInspectorGUI()
         public override void OnInspectorGUI()
         {
             // If the class we need to display doesn't use NiceAttributes, then just use the default Inspector
-            if( rootClass == null || !rootClass.HasNiceAttributes )
+            if( _rootClass == null || !_rootClass.HasNiceAttributes )
             {
                 DrawDefaultInspector();
                 return;
@@ -56,10 +51,9 @@ namespace NiceAttributes.Editor
             serializedObject.Update();
 
             // Draw our custom Inspector
-            rootClass.Draw();
+            _rootClass.Draw();
 
             serializedObject.ApplyModifiedProperties();
         }
-        #endregion OnInspectorGUI()
     }
 }

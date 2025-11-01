@@ -8,6 +8,42 @@ namespace NiceAttributes.Editor
 {
     public static class ReflectionUtility
     {
+        /// <summary>
+        /// Checks if a property is serialized by Unity, either via [SerializeField] on the property itself
+        /// or, more commonly, via [SerializeField] or [field: SerializeField] on its compiler-generated backing field.
+        /// </summary>
+        public static bool IsPropertySerialized(PropertyInfo propInfo)
+        {
+            // Properties themselves aren't typically marked [SerializeField], but check just in case.
+            // The common case is the backing field.
+            if (Attribute.IsDefined(propInfo, typeof(SerializeField)))
+            {
+                return true;
+            }
+
+            // Auto-properties generate a backing field named "<PropertyName>k__BackingField"
+            var backingFieldName = $"<{propInfo.Name}>k__BackingField";
+            // Important: Check DeclaredOnly first, as backing fields are defined in the property's declaring type.
+            var backingField = propInfo.DeclaringType?.GetField(backingFieldName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+
+            // If not found directly, maybe inheritance is involved (less common for backing fields)
+            // but let's search the hierarchy just to be safe.
+            if (backingField == null)
+            {
+                backingField = propInfo.DeclaringType?.GetField(backingFieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            }
+
+            // Check if the found backing field has [SerializeField]
+            if (backingField != null && Attribute.IsDefined(backingField, typeof(SerializeField)))
+            {
+                return true;
+            }
+
+            // Not serialized via standard mechanisms NiceAttributes should care about.
+            return false;
+        }
+
+        
         public static IEnumerable<FieldInfo> GetAllFields(object target, Func<FieldInfo, bool> predicate)
         {
             if (target == null)
