@@ -5,6 +5,11 @@ namespace NiceAttributes.Examples
     //[CreateAssetMenu(fileName = "ExampleScriptableObject", menuName = "NiceAttributes/Examples/ExampleScriptableObject", order = 1)]
     public class ExampleScriptableObject : ScriptableObject
     {
+        [BoxGroup("Serialized fields")]
+        [field: SerializeField] public uint u01 { get; private set; } = 7;
+        [BoxGroup("Serialized fields")]
+        [field: SerializeField] private uint u02 { get; set; } = 1;
+        
         public int a01;
         [BoxGroup("A", TitleColor = NiceColor.Green)] public int a02;
         [TabGroup("A/B/H", GroupBackColor = (NiceColor)0x003f00ff)] public int a03;

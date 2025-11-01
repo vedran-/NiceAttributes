@@ -215,7 +215,7 @@ namespace NiceAttributes.Editor
                 return;
             }
 
-            if (outValue != value)
+            if (outValue == null ? value != null : !outValue.Equals(value))
             {
                 // TODO: Trigger changed value event
                 
@@ -349,31 +349,31 @@ namespace NiceAttributes.Editor
                     outValue = EditorGUILayout.ObjectField( label, (UnityEngine.Object)value, valueType, true );
                 } else if( valueType == typeof( int ) )
                 {
-                    outValue = EditorGUILayout.IntField( label, (int)value );
+                    outValue = (int)EditorGUILayout.IntField( label, (int)value );
                 } else if( valueType == typeof( bool ) )
                 {
-                    outValue = EditorGUILayout.Toggle( label, (bool)value );
+                    outValue = (bool)EditorGUILayout.Toggle( label, (bool)value );
                 } else if( valueType == typeof( string ) )
                 {
-                    outValue = EditorGUILayout.TextField( label, (string)value );
+                    outValue = (string)EditorGUILayout.TextField( label, (string)value );
                 } else if( valueType == typeof( float ) )
                 {
-                    outValue = EditorGUILayout.FloatField( label, (float)value );
+                    outValue = (float)EditorGUILayout.FloatField( label, (float)value );
                 } else if( valueType == typeof( double ) )
                 {
-                    outValue = EditorGUILayout.DoubleField( label, (double)value );
+                    outValue = (double)EditorGUILayout.DoubleField( label, (double)value );
                 } else if( valueType == typeof( short ) )
                 {
-                    outValue = EditorGUILayout.IntField( label, (short)value );
+                    outValue = (short)EditorGUILayout.IntField( label, (short)value );
                 } else if( valueType == typeof( ushort ) )
                 {
-                    outValue = EditorGUILayout.IntField( label, (ushort)value );
+                    outValue = (ushort)EditorGUILayout.IntField( label, (ushort)value );
                 } else if( valueType == typeof( uint ) )
                 {
-                    outValue = EditorGUILayout.LongField( label, (uint)value );
+                    outValue = (uint)EditorGUILayout.LongField( label, (uint)value );
                 } else if( valueType == typeof( long ) )
                 {
-                    outValue = EditorGUILayout.LongField( label, (long)value );
+                    outValue = (long)EditorGUILayout.LongField( label, (long)value );
                 } else if( valueType == typeof( ulong ) )
                 {
                     var val = EditorGUILayout.TextField( label, ((ulong)value).ToString() );

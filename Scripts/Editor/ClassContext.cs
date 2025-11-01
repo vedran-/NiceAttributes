@@ -98,6 +98,43 @@ namespace NiceAttributes.Editor
         #endregion CreateContext()
 
 
+        #region IsPropertySerialized Helper
+        /// <summary>
+        /// Checks if a property is serialized by Unity, either via [SerializeField] on the property itself
+        /// or, more commonly, via [SerializeField] or [field: SerializeField] on its compiler-generated backing field.
+        /// </summary>
+        private static bool IsPropertySerialized(PropertyInfo propInfo)
+        {
+            // Properties themselves aren't typically marked [SerializeField], but check just in case.
+            // The common case is the backing field.
+            if (Attribute.IsDefined(propInfo, typeof(SerializeField)))
+            {
+                return true;
+            }
+
+            // Auto-properties generate a backing field named "<PropertyName>k__BackingField"
+            var backingFieldName = $"<{propInfo.Name}>k__BackingField";
+            // Important: Check DeclaredOnly first, as backing fields are defined in the property's declaring type.
+            var backingField = propInfo.DeclaringType?.GetField(backingFieldName, BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.DeclaredOnly);
+
+            // If not found directly, maybe inheritance is involved (less common for backing fields)
+            // but let's search the hierarchy just to be safe.
+            if (backingField == null)
+            {
+                backingField = propInfo.DeclaringType?.GetField(backingFieldName, BindingFlags.Instance | BindingFlags.NonPublic);
+            }
+
+            // Check if the found backing field has [SerializeField]
+            if (backingField != null && Attribute.IsDefined(backingField, typeof(SerializeField)))
+            {
+                return true;
+            }
+
+            // Not serialized via standard mechanisms NiceAttributes should care about.
+            return false;
+        }
+        #endregion
+
         #region IsVisible()
         private bool IsVisible( MemberInfo mt )
         {
@@ -107,7 +144,7 @@ namespace NiceAttributes.Editor
                 return false;
             }
 
-            if( mt.MemberType == MemberTypes.Property ) return Attribute.IsDefined( mt, typeof( ShowAttribute ) );
+            if( mt.MemberType == MemberTypes.Property ) return Attribute.IsDefined( mt, typeof( ShowAttribute ) ) || IsPropertySerialized(mt as PropertyInfo);
             if( mt.MemberType == MemberTypes.Method ) return Attribute.IsDefined( mt, typeof( ButtonAttribute ) );
             if( mt is not FieldInfo fi ) return false;
 
@@ -472,7 +509,15 @@ namespace NiceAttributes.Editor
             {
                 if( !property.propertyPath.StartsWith( parentPath ) ) break;    // Don't go into children of other classes
 
-                var item = ctx.members.FirstOrDefault( d => d.memberInfo != null && d.memberInfo.Name == property.name );
+                var item = ctx.members.FirstOrDefault( d =>
+                    d.memberInfo != null &&
+                    (
+                        // Standard match: Field name or direct property name matches SerializedProperty name
+                        d.memberInfo.Name == property.name ||
+                        // Backing field match: Member is a Property, and its expected backing field name matches SerializedProperty name
+                        (d.memberInfo is PropertyInfo propInfo && $"<{propInfo.Name}>k__BackingField" == property.name)
+                    )
+                );
                 if( item == null )
                 {
                     if( property.name == "m_Script" )   // Special case - m_Script - insert it as 1st element in list
