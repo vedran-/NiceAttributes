@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using UnityEditor;
 using UnityEngine;
 
@@ -82,6 +83,7 @@ namespace NiceAttributes.Editor
             // Field
             if (Attribute.IsDefined(fi, typeof(ShowAttribute))) return true;
             if (fi.IsStatic) return false; // Static fields - not visible
+            if (fi.GetCustomAttribute<CompilerGeneratedAttribute>() != null) return false; // Auto-property backing fields - not visible
 
             var isVisible = (fi.IsPublic && !Attribute.IsDefined(fi, typeof(NonSerializedAttribute)))
                             || Attribute.IsDefined(fi, typeof(SerializeField));
