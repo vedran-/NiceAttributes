@@ -161,12 +161,12 @@ namespace NiceAttributes
                 ? EditorGUILayout.GetControlRect( GUILayout.MaxWidth( size.x ), GUILayout.MaxHeight( size.y ) )
                 : EditorGUILayout.GetControlRect( GUILayout.MaxHeight( size.y ) );
             var bgRect = fitWidth ? rect.Grow( 3, 3, 3, 3 ) : rect.Grow( 3, 3, 3, 0 );
-            var bgCol = groupAttr == null || groupAttr.TitleBackColor == BaseGroupAttribute.ColorNotSet ? HeaderBgColor : groupAttr.TitleBackColor.ToColor();
+            var bgCol = groupAttr == null || !groupAttr.TitleBackColor.HasValue() ? HeaderBgColor : groupAttr.TitleBackColor.ToColor();
             FillRect( bgRect, bgCol );
 
             if( !fitWidth ) rect.y -= 2;
             var fgCol = groupAttr == null || !groupAttr.TitleColor.HasValue() ? Color.white : groupAttr.TitleColor.ToColor();
-            var shadowCol = groupAttr == null || groupAttr.TitleShadowColor == BaseGroupAttribute.ColorNotSet ? Color.gray : groupAttr.TitleShadowColor.ToColor();
+            var shadowCol = groupAttr == null || !groupAttr.TitleShadowColor.HasValue() ? Color.gray : groupAttr.TitleShadowColor.ToColor();
             DrawLabel( rect, label, EditorStyles.boldLabel, fgCol, shadowCol );
         }
         #endregion DrawHeader()

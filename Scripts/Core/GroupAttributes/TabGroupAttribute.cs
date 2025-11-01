@@ -52,7 +52,7 @@ namespace NiceAttributes
             tabRect = EditorGUILayout.BeginVertical();
 
             // Fill the background, if set
-            if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( tabRect, GroupBackColor.ToColor() );
+            if( GroupBackColor.HasValue() ) DrawingUtil.FillRect( tabRect, GroupBackColor.ToColor() );
 
             DrawingUtil.DrawTabHeader( tabParent );
 

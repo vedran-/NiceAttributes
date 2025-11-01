@@ -10,17 +10,17 @@ namespace NiceAttributes
     public class FoldoutAttribute : BaseGroupAttribute
     {
 #if UNITY_EDITOR
-        bool foldedOut = true;
+        private bool _foldedOut = true;
 #endif
 
         //var id = $"{this.target.GetInstanceID()}.{Name}";    // TODO
         string id => GroupName;
 
-        public FoldoutAttribute( string groupName = "", [CallerLineNumber] int lineNumber = 0 )
-            : base( groupName, lineNumber )
+        public FoldoutAttribute(string groupName = "", [CallerLineNumber] int lineNumber = 0)
+            : base(groupName, lineNumber)
         {
 #if UNITY_EDITOR
-            foldedOut = EditorPrefs.GetBool( id, true );
+            _foldedOut = EditorPrefs.GetBool(id, true);
 #endif
         }
 
@@ -30,17 +30,19 @@ namespace NiceAttributes
             var rect = EditorGUILayout.BeginVertical();
 
             // Fill the background, if set
-            if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( rect, GroupBackColor.ToColor() );
+            if (GroupBackColor.HasValue()) DrawingUtil.FillRect(rect, GroupBackColor.ToColor());
 
             var label = Title ?? GroupName;
-            var folded = EditorGUILayout.Foldout( foldedOut, GetLabel(), true );
-            if( folded != foldedOut ) { // Value changed
-                foldedOut = folded;
-                EditorPrefs.SetBool( id, folded );
+            var folded = EditorGUILayout.Foldout(_foldedOut, GetLabel(), true);
+            if (folded != _foldedOut)
+            {
+                // Value changed
+                _foldedOut = folded;
+                EditorPrefs.SetBool(id, folded);
             }
 
             // Return true to draw elements of the group, or false not to draw them
-            return foldedOut;
+            return _foldedOut;
         }
 
         private protected override void OnGUI_GroupEnd()

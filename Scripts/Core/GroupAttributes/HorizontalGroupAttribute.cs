@@ -19,7 +19,7 @@ namespace NiceAttributes
             var rect = EditorGUILayout.BeginHorizontal();
 
             // Fill the background, if set
-            if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( rect, GroupBackColor.ToColor() );
+            if( GroupBackColor.HasValue() ) DrawingUtil.FillRect( rect, GroupBackColor.ToColor() );
 
             lastStartId = GUIUtility.GetControlID( FocusType.Passive );
 

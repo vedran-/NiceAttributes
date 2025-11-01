@@ -14,14 +14,14 @@ namespace NiceAttributes
         }
 
 #if UNITY_EDITOR
-        Rect drawRect;
+        private Rect _drawRect;
 
         private protected override bool OnGUI_GroupStart()
         {
-            drawRect = UnityEditor.EditorGUILayout.BeginVertical( GUI.skin.box );
+            _drawRect = UnityEditor.EditorGUILayout.BeginVertical( GUI.skin.box );
 
             // Fill the background, if set
-            if( GroupBackColor != ColorNotSet ) DrawingUtil.FillRect( drawRect, GroupBackColor.ToColor() );
+            if( GroupBackColor.HasValue() ) DrawingUtil.FillRect( _drawRect, GroupBackColor.ToColor() );
 
 
             // Show the label
@@ -36,7 +36,7 @@ namespace NiceAttributes
             UnityEditor.EditorGUILayout.EndVertical();
 
             // Draw bounding rect
-            DrawingUtil.DrawRect( drawRect, Color.black );
+            DrawingUtil.DrawRect( _drawRect, Color.black );
         }
 #endif
     }
