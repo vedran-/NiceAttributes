@@ -37,7 +37,7 @@ namespace NiceAttributes.Editor
             EditorGUI.CurveField(
                 rect,
                 property,
-                curveRangeAttribute.Color == EColor.Clear ? Color.green : curveRangeAttribute.Color.ToColor(),
+                curveRangeAttribute.Color == NiceColor.Clear ? Color.green : curveRangeAttribute.Color.ToColor(),
                 curveRanges,
                 label);
 

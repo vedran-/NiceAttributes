@@ -7,12 +7,12 @@ namespace NiceAttributes
     public class HorizontalLineAttribute : DrawerAttribute
     {
         public const float DefaultHeight = 2.0f;
-        public const EColor DefaultColor = EColor.Gray;
+        public const NiceColor DefaultColor = NiceColor.Gray;
 
         public float Height { get; private set; }
-        public EColor Color { get; private set; }
+        public NiceColor Color { get; private set; }
 
-        public HorizontalLineAttribute( float height = DefaultHeight, EColor color = DefaultColor, [CallerLineNumber] int lineNumber = 0 )
+        public HorizontalLineAttribute( float height = DefaultHeight, NiceColor color = DefaultColor, [CallerLineNumber] int lineNumber = 0 )
             : base( lineNumber )
         {
             Height = height;

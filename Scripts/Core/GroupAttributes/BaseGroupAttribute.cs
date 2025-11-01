@@ -1,20 +1,21 @@
 ﻿using System.Text.RegularExpressions;
 using UnityEditor;
+using UnityEngine;
 
 namespace NiceAttributes
 {
     public abstract class BaseGroupAttribute : MetaAttribute
     {
-        public const EColor ColorNotSet = (EColor)0x00000002;
-
+        public const NiceColor ColorNotSet = (NiceColor)0x00000002;
+        
         public string   GroupName { get; private set; }
 
         public string   Title { get; set; } = null;
         public bool     ShowTitle { get; set; } = false;
-        public EColor   TitleColor { get; set; } = ColorNotSet;
-        public EColor   TitleShadowColor { get; set; } = ColorNotSet;
-        public EColor   TitleBackColor { get; set; } = ColorNotSet;
-        public EColor   GroupBackColor { get; set; } = ColorNotSet;
+        public NiceColor   TitleColor { get; set; } = ColorNotSet;
+        public NiceColor   TitleShadowColor { get; set; } = ColorNotSet;
+        public NiceColor   TitleBackColor { get; set; } = ColorNotSet;
+        public NiceColor   GroupBackColor { get; set; } = ColorNotSet;
 
         public float    InsideLabelWidth { get; set; } = 0;
         public float    InsideFieldWidth { get; set; } = 0;

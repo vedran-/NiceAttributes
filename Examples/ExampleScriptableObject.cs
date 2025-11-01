@@ -1,0 +1,45 @@
+using UnityEngine;
+
+namespace NiceAttributes.Examples
+{
+    //[CreateAssetMenu(fileName = "ExampleScriptableObject", menuName = "NiceAttributes/Examples/ExampleScriptableObject", order = 1)]
+    public class ExampleScriptableObject : ScriptableObject
+    {
+        public int a01;
+        [BoxGroup("A", TitleColor = NiceColor.Green)] public int a02;
+        [TabGroup("A/B/H", GroupBackColor = (NiceColor)0x003f00ff)] public int a03;
+        [BoxGroup("A")] public int a04;
+        [TabGroup("A/B/H")] public int a05;
+        [BoxGroup("A")] public int a06;
+        public int a07;
+        [BoxGroup("A")] public int a08;
+        [TabGroup("A/B/C", TitleColor = NiceColor.Black, TitleShadowColor = 0, TitleBackColor = (NiceColor)0x3f7f2fff, GroupBackColor = (NiceColor)0x7f7f00ff)] public int a09;
+        [BoxGroup("A/B", TitleBackColor = (NiceColor)0xFF00007f)] public int a10;
+        [TabGroup("A/B/C")] public int a11;
+        public int a12;
+        [BoxGroup("A")] public int a13;
+        [BoxGroup("A/D")] public int a14;
+        [BoxGroup("A")] public int a15;
+        public int a16;
+        [BoxGroup("X/Y")] public int a17;
+        [BoxGroup("X")] public int a18;
+        [BoxGroup("X")] public int a19;
+        public int a20;
+
+
+        [HorizontalGroup("A/B/C/Buttons")]
+        [Button] void B() {}
+        [HorizontalGroup( "A/B/C/Buttons" )]
+        [Button] void A() {}
+
+
+        [TabGroup("A/B/H/Sizes", GroupBackColor = (NiceColor)0xffff000)]
+        [Show] private int a = 3;
+        [TabGroup("A/B/H/Mines")]
+        [Show] private string b => "Uga!";
+        [TabGroup("A/B/H/Buttons")]
+        [Button] private int c() => 4;
+        [Show] private int d => 5;
+        [Show] private int e => 6;
+    }
+}

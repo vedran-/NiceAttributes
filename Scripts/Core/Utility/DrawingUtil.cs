@@ -165,7 +165,7 @@ namespace NiceAttributes
             FillRect( bgRect, bgCol );
 
             if( !fitWidth ) rect.y -= 2;
-            var fgCol = groupAttr == null || groupAttr.TitleColor == BaseGroupAttribute.ColorNotSet ? Color.white : groupAttr.TitleColor.ToColor();
+            var fgCol = groupAttr == null || !groupAttr.TitleColor.HasValue() ? Color.white : groupAttr.TitleColor.ToColor();
             var shadowCol = groupAttr == null || groupAttr.TitleShadowColor == BaseGroupAttribute.ColorNotSet ? Color.gray : groupAttr.TitleShadowColor.ToColor();
             DrawLabel( rect, label, EditorStyles.boldLabel, fgCol, shadowCol );
         }
