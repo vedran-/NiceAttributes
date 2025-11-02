@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using NiceAttributes.Model;
 
 namespace NiceAttributes
 {
     [AttributeUsage( AttributeTargets.Method, AllowMultiple = false, Inherited = true )]
+    [Conditional("UNITY_EDITOR")]
     public class ButtonAttribute : SpecialCaseDrawerAttribute
     {
         public string Text { get; private set; }

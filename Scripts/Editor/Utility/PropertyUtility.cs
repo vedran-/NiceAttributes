@@ -1,11 +1,11 @@
-﻿using UnityEditor;
-using System.Reflection;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Reflection;
+using UnityEditor;
 using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.Utility
 {
     public static class PropertyUtility
     {

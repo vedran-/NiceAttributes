@@ -1,12 +1,12 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
-#if UNITY_EDITOR
-    using UnityEditor;
-#endif
+using UnityEditor;
 
 namespace NiceAttributes
 {
     [AttributeUsage(AttributeTargets.Field | AttributeTargets.Property | AttributeTargets.Method, AllowMultiple = false, Inherited = true)]
+    [Conditional("UNITY_EDITOR")]
     public class FoldoutAttribute : BaseGroupAttribute
     {
 #if UNITY_EDITOR

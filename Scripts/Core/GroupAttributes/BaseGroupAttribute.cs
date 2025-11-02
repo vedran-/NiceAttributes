@@ -1,6 +1,5 @@
-﻿using System.Text.RegularExpressions;
+﻿using NiceAttributes.Model;
 using UnityEditor;
-using UnityEngine;
 
 namespace NiceAttributes
 {

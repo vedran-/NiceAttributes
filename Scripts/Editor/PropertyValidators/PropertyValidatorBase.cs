@@ -1,6 +1,6 @@
 ﻿using UnityEditor;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyValidators
 {
     public abstract class PropertyValidatorBase
     {

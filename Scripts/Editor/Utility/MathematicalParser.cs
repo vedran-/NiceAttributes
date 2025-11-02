@@ -1,8 +1,7 @@
 using System;
 using System.Collections.Generic;
-using JetBrains.Annotations;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.Utility
 {
     /// <summary>
     /// Features:

@@ -1,4 +1,4 @@
-﻿namespace NiceAttributes
+﻿namespace NiceAttributes.Interfaces
 {
     public interface INiceAttribute
     {

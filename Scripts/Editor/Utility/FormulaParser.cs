@@ -4,7 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.Utility
 {
     public class FormulaParser
     {

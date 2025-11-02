@@ -40,7 +40,9 @@ namespace NiceAttributes.Examples
 
 
         [TabGroup("A/B/H/Sizes", GroupBackColor = (NiceColor)0xffff000)]
+#pragma warning disable CS0414 // Field is assigned but its value is never used
         [Show] private int a = 3;
+#pragma warning restore CS0414 // Field is assigned but its value is never used
         [TabGroup("A/B/H/Mines")]
         [Show] private string b => "Uga!";
         [TabGroup("A/B/H/Buttons")]

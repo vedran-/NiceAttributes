@@ -1,10 +1,12 @@
 using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UnityEditor;
 
 namespace NiceAttributes
 {
     [AttributeUsage( AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Method, AllowMultiple = true )]
+    [Conditional("UNITY_EDITOR")]
     public class VerticalGroupAttribute : BaseGroupAttribute
     {
         public VerticalGroupAttribute( string groupName = "", [CallerLineNumber] int lineNumber = 0 ) 

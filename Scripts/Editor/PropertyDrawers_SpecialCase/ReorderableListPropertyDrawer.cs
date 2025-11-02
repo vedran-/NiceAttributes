@@ -1,9 +1,10 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using NiceAttributes.Editor.Utility;
 using UnityEditor;
 using UnityEditorInternal;
-using System.Collections.Generic;
+using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyDrawers_SpecialCase
 {
     public class ReorderableListPropertyDrawer : SpecialCasePropertyDrawerBase
     {

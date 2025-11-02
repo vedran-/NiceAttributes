@@ -1,6 +1,7 @@
-﻿using UnityEngine;
+﻿using NiceAttributes.Interfaces;
+using UnityEngine;
 
-namespace NiceAttributes
+namespace NiceAttributes.Model
 {
     /// <summary>
     /// Base class for all drawer attributes

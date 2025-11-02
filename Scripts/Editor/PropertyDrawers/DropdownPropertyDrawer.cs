@@ -1,11 +1,12 @@
-﻿using UnityEngine;
-using UnityEditor;
+﻿using System;
 using System.Collections;
-using System.Reflection;
-using System;
 using System.Collections.Generic;
+using System.Reflection;
+using NiceAttributes.Editor.Utility;
+using UnityEditor;
+using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyDrawers
 {
     [CustomPropertyDrawer(typeof(DropdownAttribute))]
     public class DropdownPropertyDrawer : PropertyDrawerBase

@@ -1,6 +1,7 @@
 ﻿using System;
+using NiceAttributes.Interfaces;
 
-namespace NiceAttributes
+namespace NiceAttributes.Model
 {
     public abstract class ValidatorAttribute : Attribute, INiceAttribute
     {

@@ -1,4 +1,5 @@
 using System.Reflection;
+using NiceAttributes.Interfaces;
 using UnityEditor;
 
 namespace NiceAttributes.Editor

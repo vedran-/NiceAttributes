@@ -1,7 +1,8 @@
 using System;
 using System.Collections.Generic;
+using NiceAttributes.Model;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyValidators
 {
     public static class ValidatorAttributeExtensions
     {

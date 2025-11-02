@@ -1,7 +1,8 @@
-﻿using UnityEditor;
+﻿using NiceAttributes.Editor.Utility;
+using UnityEditor;
 using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyDrawers
 {
     [CustomPropertyDrawer(typeof(MinMaxSliderAttribute))]
     public class MinMaxSliderPropertyDrawer : PropertyDrawerBase

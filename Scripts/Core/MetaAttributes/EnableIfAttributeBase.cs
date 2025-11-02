@@ -1,4 +1,5 @@
 ﻿using System;
+using NiceAttributes.Model;
 
 namespace NiceAttributes
 {

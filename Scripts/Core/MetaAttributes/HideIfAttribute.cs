@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace NiceAttributes
 {
     [AttributeUsage( AttributeTargets.Field | AttributeTargets.Method, AllowMultiple = false, Inherited = true )]
+    [Conditional("UNITY_EDITOR")]
     public class HideIfAttribute : ShowIfAttributeBase
     {
         public HideIfAttribute( string condition, [CallerLineNumber] int lineNumber = 0 )

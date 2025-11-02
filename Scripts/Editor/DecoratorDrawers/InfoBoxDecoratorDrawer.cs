@@ -1,7 +1,8 @@
-﻿using UnityEditor;
+﻿using NiceAttributes.Editor.Utility;
+using UnityEditor;
 using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.DecoratorDrawers
 {
     [CustomPropertyDrawer( typeof( InfoBoxAttribute ) )]
     public class InfoBoxDecoratorDrawer : DecoratorDrawer

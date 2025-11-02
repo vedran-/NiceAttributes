@@ -1,9 +1,10 @@
 using System;
 using System.Collections;
+using NiceAttributes.Editor.PropertyDrawers;
 using UnityEditor;
 using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyDrawers_SpecialCase
 {
     [CustomPropertyDrawer(typeof(IList), true)]
     [CustomPropertyDrawer(typeof(Array), true)]

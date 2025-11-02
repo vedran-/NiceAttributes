@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace NiceAttributes
+﻿namespace NiceAttributes
 {
     public enum EConditionOperator
     {

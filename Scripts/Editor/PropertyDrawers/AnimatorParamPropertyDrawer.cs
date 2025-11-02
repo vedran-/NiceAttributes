@@ -1,10 +1,11 @@
 ﻿using System.Collections.Generic;
 using System.Reflection;
+using NiceAttributes.Editor.Utility;
 using UnityEditor;
 using UnityEditor.Animations;
 using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyDrawers
 {
     [CustomPropertyDrawer(typeof(AnimatorParamAttribute))]
     public class AnimatorParamPropertyDrawer : PropertyDrawerBase

@@ -1,13 +1,15 @@
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NiceAttributes.Editor.PropertyDrawers_SpecialCase;
+using NiceAttributes.Editor.PropertyValidators;
+using NiceAttributes.Model;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.Utility
 {
     public static class NiceEditorGUI
     {

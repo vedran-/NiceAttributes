@@ -1,7 +1,8 @@
-﻿using UnityEngine;
+﻿using NiceAttributes.Editor.Utility;
 using UnityEditor;
+using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyValidators
 {
     public class MinValuePropertyValidator : PropertyValidatorBase
     {

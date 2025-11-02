@@ -1,6 +1,7 @@
-﻿using UnityEditor;
+﻿using NiceAttributes.Editor.Utility;
+using UnityEditor;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyValidators
 {
     public class RequiredPropertyValidator : PropertyValidatorBase
     {

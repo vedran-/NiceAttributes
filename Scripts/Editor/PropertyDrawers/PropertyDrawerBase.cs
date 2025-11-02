@@ -1,7 +1,11 @@
-﻿using UnityEditor;
+﻿using NiceAttributes.Editor.PropertyDrawers_SpecialCase;
+using NiceAttributes.Editor.PropertyValidators;
+using NiceAttributes.Editor.Utility;
+using NiceAttributes.Model;
+using UnityEditor;
 using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyDrawers
 {
     public abstract class PropertyDrawerBase : PropertyDrawer
     {

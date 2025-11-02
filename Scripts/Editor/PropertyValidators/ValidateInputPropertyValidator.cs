@@ -1,8 +1,9 @@
-using UnityEditor;
-using System.Reflection;
 using System;
+using System.Reflection;
+using NiceAttributes.Editor.Utility;
+using UnityEditor;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyValidators
 {
     public class ValidateInputPropertyValidator : PropertyValidatorBase
     {

@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using System;
+using NiceAttributes.Editor.Utility;
 using UnityEditor;
-using System;
+using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyDrawers
 {
     [CustomPropertyDrawer(typeof(EnumFlagsAttribute))]
     public class EnumFlagsPropertyDrawer : PropertyDrawerBase

@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using NiceAttributes.Editor.PropertyDrawers;
+using NiceAttributes.Editor.Utility;
+using NiceAttributes.Interfaces;
 using UnityEditor;
 using UnityEngine;
 
@@ -322,7 +325,9 @@ namespace NiceAttributes.Editor
                     // TODO2: If not, perhaps display the item on 2 (or more) positions?
 
                     // Make sure that group type hasn't changed!
-                    if( groupAttribute != null && groupInfo.groupAttribute.GetType() != groupAttribute.GetType() ) {
+                    if( groupAttribute != null && groupAttribute is not GroupAttribute
+                        && groupInfo.groupAttribute.GetType() != groupAttribute.GetType() )
+                    {
                         errors.Add( $"Group type {groupAttribute.GetType().Name} is different from original {groupInfo.groupAttribute.GetType().Name} for group '{groupInfo.groupName}'!" );
                     }
                 }

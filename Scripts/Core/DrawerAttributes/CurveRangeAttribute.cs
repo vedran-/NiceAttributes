@@ -1,10 +1,13 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
+using NiceAttributes.Model;
 using UnityEngine;
 
 namespace NiceAttributes
 {
     [AttributeUsage( AttributeTargets.Field, AllowMultiple = false, Inherited = true )]
+    [Conditional("UNITY_EDITOR")]
     public class CurveRangeAttribute : DrawerAttribute
     {
         public Vector2 Min { get; private set; }

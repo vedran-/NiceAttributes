@@ -1,33 +1,27 @@
 #if UNITY_EDITOR
-
 using System;
-using System.Text.RegularExpressions;
-using UnityEngine;
 using System.Linq;
-#if UNITY_EDITOR
-    using UnityEditor;
-#endif
+using System.Text.RegularExpressions;
+using UnityEditor;
+using UnityEngine;
 
 namespace NiceAttributes
 {
     public static class DrawingUtil
     {
-        #region GetDefaultBackgroundColor()
-#if UNITY_EDITOR
-        static readonly Color BgProSkin = new Color32(56, 56, 56, 255), BgPoorSkin = new Color32(194, 194, 194, 255);
-        public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? BgProSkin : BgPoorSkin;
-        //static Color bgColorToRed = Color.Lerp( GUI.skin.window.normal.background.GetPixel( 0, 0 ), Color.red, 0.10f );
-#endif
-        #endregion GetDefaultBackgroundColor()
+        private static readonly Color _bgProSkin = new Color32(56, 56, 56, 255),
+            _bgPoorSkin = new Color32(194, 194, 194, 255);
+        private static Texture2D _fillRectBackgroundTexture;
+        private static GUIStyle _fillRectTextureStyle;
+        private static readonly Color _headerBgColor = new Color32( 3, 45, 53, 255 );
+        
+        
+        public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? _bgProSkin : _bgPoorSkin;
+        //public static Color bgColorToRed = Color.Lerp( GUI.skin.window.normal.background.GetPixel( 0, 0 ), Color.red, 0.10f );
 
-        #region [Line] DrawHorizontalLine()
         public static void DrawHorizontalLine( float x, float y, float width, Color color, float thickness = 1 ) => FillRect( new Rect( x, y-thickness/2f, width, thickness ), color );
-        #endregion DrawHorizontalLine()
-        #region [Line] DrawVerticalLine()
         public static void DrawVerticalLine( float x, float y, float height, Color color, float thickness = 1 ) => FillRect( new Rect( x - thickness / 2f, y, thickness, height ), color );
-        #endregion DrawVerticalLine()
 
-        #region [Rect] DrawRect()
         public static void DrawRect( Rect rect, Color color, float thickness = 1f )
         {
             DrawHorizontalLine( rect.x, rect.yMin, rect.width, color, thickness );
@@ -35,25 +29,19 @@ namespace NiceAttributes
             DrawVerticalLine( rect.xMin, rect.y, rect.height, color, thickness );
             DrawVerticalLine( rect.xMax, rect.y, rect.height, color, thickness );
         }
-        #endregion DrawRect()
-        #region [Rect] FillRect()
-        private static Texture2D drawRectBackgroundTexture;
-        private static GUIStyle drawRectTextureStyle;
+
         public static void FillRect( Rect rect, Color color, GUIContent content = null )
         {
-            if( !drawRectBackgroundTexture ) drawRectBackgroundTexture = Texture2D.whiteTexture;
-            if( drawRectTextureStyle == null ) drawRectTextureStyle = new GUIStyle { normal = new GUIStyleState { background = drawRectBackgroundTexture } };
+            if( !_fillRectBackgroundTexture ) _fillRectBackgroundTexture = Texture2D.whiteTexture;
+            if( _fillRectTextureStyle == null ) _fillRectTextureStyle = new GUIStyle { normal = new GUIStyleState { background = _fillRectBackgroundTexture } };
 
             var backgroundColor = GUI.backgroundColor;
             GUI.backgroundColor = color;
-            GUI.Box( rect, content ?? GUIContent.none, drawRectTextureStyle );
+            GUI.Box( rect, content ?? GUIContent.none, _fillRectTextureStyle );
             GUI.backgroundColor = backgroundColor;
         }
-        #endregion FillRect()
 
 
-
-        #region [Label] DrawLabel() - draws with shadow too
         public static void DrawLabel( Rect rect, string text, GUIStyle guiStyle, Color textColor, Color? shadowColor, Action<string> setCellValue = null )
         {
             var origContentColor = GUI.contentColor;
@@ -93,9 +81,7 @@ namespace NiceAttributes
 
             GUI.contentColor = origContentColor;
         }
-        #endregion DrawLabel()
 
-        #region [Window GUI] GetRectToFillWindow()
         /// <summary>
         /// Gets size of Rect, which would fill all available window space, to bottom of window.
         /// It uses a trick - ScrollView always fills window
@@ -122,14 +108,11 @@ namespace NiceAttributes
             GUI.enabled = wasEnabled;
             return rect;
         }
-        #endregion GetRectToFillWindow()
 
         private static string RemoveColorRichTextTags( string str ) => Regex.Replace( str, @"\<(\/)?color(=""?#?\w+""?)?\>", "" );
 
 
 
-        #region [Rect-Editor only] DrawCheckeredRect()
-#if UNITY_EDITOR
         public static void DrawCheckeredRect( Rect rect, float xSize = 10, float ySize = 10, Color? color = null, float colorFactorTowardsWhite = 0.5f )
         {
             Color col1 = color ?? Color.gray;
@@ -148,11 +131,7 @@ namespace NiceAttributes
                 }
             }
         }
-#endif
-        #endregion DrawCheckeredRect()
 
-        #region [Editor only] DrawHeader()
-        static readonly Color HeaderBgColor = new Color32( 3, 45, 53, 255 );
         public static void DrawHeader( string label, bool fitWidth = false, BaseGroupAttribute groupAttr = null )
         {
             var size = EditorStyles.boldLabel.CalcSize( new GUIContent( label ) );
@@ -161,7 +140,7 @@ namespace NiceAttributes
                 ? EditorGUILayout.GetControlRect( GUILayout.MaxWidth( size.x ), GUILayout.MaxHeight( size.y ) )
                 : EditorGUILayout.GetControlRect( GUILayout.MaxHeight( size.y ) );
             var bgRect = fitWidth ? rect.Grow( 3, 3, 3, 3 ) : rect.Grow( 3, 3, 3, 0 );
-            var bgCol = groupAttr == null || !groupAttr.TitleBackColor.HasValue() ? HeaderBgColor : groupAttr.TitleBackColor.ToColor();
+            var bgCol = groupAttr == null || !groupAttr.TitleBackColor.HasValue() ? _headerBgColor : groupAttr.TitleBackColor.ToColor();
             FillRect( bgRect, bgCol );
 
             if( !fitWidth ) rect.y -= 2;
@@ -169,9 +148,7 @@ namespace NiceAttributes
             var shadowCol = groupAttr == null || !groupAttr.TitleShadowColor.HasValue() ? Color.gray : groupAttr.TitleShadowColor.ToColor();
             DrawLabel( rect, label, EditorStyles.boldLabel, fgCol, shadowCol );
         }
-        #endregion DrawHeader()
 
-        #region DrawTabHeader()
         public static void DrawTabHeader( TabGroupAttribute.TabParent tabParent )
         {
             // Check/create Tab header
@@ -184,7 +161,6 @@ namespace NiceAttributes
                 EditorGUIUtility.editingTextField = false;
             }
         }
-        #endregion DrawTabHeader()
     }
 }
 #endif

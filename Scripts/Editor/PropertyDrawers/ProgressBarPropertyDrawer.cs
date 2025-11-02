@@ -1,8 +1,9 @@
-﻿using UnityEngine;
+﻿using System.Reflection;
+using NiceAttributes.Editor.Utility;
 using UnityEditor;
-using System.Reflection;
+using UnityEngine;
 
-namespace NiceAttributes.Editor
+namespace NiceAttributes.Editor.PropertyDrawers
 {
     [CustomPropertyDrawer(typeof(ProgressBarAttribute))]
     public class ProgressBarPropertyDrawer : PropertyDrawerBase
