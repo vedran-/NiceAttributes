@@ -6,12 +6,14 @@ The project's name is a nod to the original, acknowledging the groundwork laid b
 ## Features
 
 - **Optimized for speed:** NiceAttributes is designed to be fast. It should not slow down your project in any way. 
+- **Nested groups:** You can nest any group inside any other group.
+    - **Lazy defining of nested groups:** Define nested groups like `[BoxGroup("X/Y")]` and specify parent group type later, with e.g. `[HorizontalGroup("X")]`.
+- **Ordering as in code:** Paid special attention to ensuring that the ordering of fields, properties, and methods (buttons) is as close as possible to their order in the source code file.
+  That means that buttons defined next to a field will be displayed next to that field in the inspector, instead on bottom of the inspector, as it is with other similar libraries.
+
+
 - **[Show]** and **[Hide]** attributes: Show or hide any field, property, or even non-Serializable class in the Inspector.
 - **[TabGroup]**, **[HorizontalGroup]**, **[VerticalGroup]**, **[BoxGroup]**, **[Foldout]** grouping attributes.
-- **Nested groups:** You can nest any group inside any other group.
-  - **Lazy defining of nested groups:** Define nested groups like `[BoxGroup("X/Y")]` and specify parent group type later, with e.g. `[HorizontalGroup("X")]`.
-- **Ordering as in code:** Paid special attention to ensuring that the ordering of fields, properties, and methods (buttons) is as close as possible to their order in the source code file.
-That means that buttons defined next to a field will be displayed next to that field in the inspector.
 - **Dynamic Text** - You can use formula inside text. That formula can use local **fields** and **properties**, which are treated as variables, or even call local **methods**, which are treated as functions.
 
 - **Custom GUI** - You can display custom GUI in the Inspector using the `[OnGUI]` attribute.
