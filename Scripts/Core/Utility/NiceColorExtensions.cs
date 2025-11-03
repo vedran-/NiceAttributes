@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace NiceAttributes
 {
-    public static class EColorExtensions
+    public static class NiceColorExtensions
     {
         public static Color ToColor( this NiceColor color )
         {

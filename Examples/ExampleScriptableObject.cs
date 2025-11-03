@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace NiceAttributes.Examples
@@ -9,14 +10,11 @@ namespace NiceAttributes.Examples
         [BoxGroup("BoxGroup: Serialized properties")]
         [field: SerializeField] private uint u02 { get; set; } = 1;
 
-        [TabGroup("Animals")]
-        public int animalsCount;
-        [TabGroup("Animals/Dogs", Title = "Dogs")]
-        public int dogsCount;
-        [TabGroup("Animals/Dogs", Title = "Dogs")]
-        public bool isDogHappy;
-        [TabGroup("Animals/Cats", Title = "Cats")]
-        public int catsCount;
+        [TabGroup("Animals")] public int animalsCount; 
+        [TabGroup("Animals")] public List<string> animalNames = new List<string>() {"Lassie", "Laika", "Max"};
+        [TabGroup("Animals/Dogs", Title = "Dogs")] public int dogsCount;
+        [TabGroup("Animals/Dogs")] public bool isDogHappy;
+        [TabGroup("Animals/Cats", Title = "Cats")] public int catsCount;
         [TabGroup("Animals/Cats", Title = "Cats")]
         [InfoBox("This is private non-serialized field shown with [Show] attribute")]   // TODO: Make InfoBox work with Show/TabGroup attribute
         [Show] private bool isCatHappy;
@@ -30,6 +28,12 @@ namespace NiceAttributes.Examples
         [TabGroup("Objects/Electronics", Title = "Electronics")]
         public int electronicsCount;
         
+        
+        [OnGUI(PreDrawMethodName = "OnPreGUI", PostDrawMethodName = "OnPostGUI")]
+        public string CustomGUIFunctionExample = "Look at OnPreGUI() and OnPostGUI() methods in the script to see how to use custom GUI functions.";
+        
+        
+        [Space(50)]
         public int a01;
 
         [BoxGroup("A", TitleColor = NiceColor.Green)] public int a02;
@@ -69,5 +73,23 @@ namespace NiceAttributes.Examples
         [Button] private int c() => 4;
         [Show] private int d => 5;
         [Show] private int e => 6;
+
+
+        private void OnPreGUI()
+        {
+            var rect = GUILayoutUtility.GetRect(0, 22);
+            DrawingUtil.FillRoundedRect(rect, Color.black, new GUIContent("This red square is drawn from OnPreGUI() method"));
+            //DrawingUtil.DrawLabel(rect, "This red square is drawn from OnPreGUI() method", new GUIStyle("box"), Color.white, Color.black);
+            DrawingUtil.DrawRect(rect, Color.cyan, 1);
+        }
+        private void OnPostGUI()
+        {
+            var rect = GUILayoutUtility.GetRect(0, 60);
+            DrawingUtil.DrawCheckeredRect(rect, color: Color.blueViolet);
+            DrawingUtil.DrawLabel(rect, "This checkered area is drawn from OnPostGUI() method", 
+                new GUIStyle("box"), Color.white, Color.black);
+            //DrawingUtil.FillRect(rect, Color.blueViolet, new GUIContent("This is drawn from OnPostGUI() method"));
+            DrawingUtil.DrawRect(rect, Color.greenYellow, 1);
+        }
     }
 }

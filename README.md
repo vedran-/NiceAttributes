@@ -103,6 +103,10 @@ private PrivateNonSerialized b; // Not shown in inspector - field is private, so
 [Show] private PrivateNonSerialized c; // Shown in inspector - because the field and class have [Show] attribute
 ```
 
+## Problems
+ - InfoBox inside groups does not work properly yet.
+ - Improve TabGroup / BoxGroup / FoldoutGroup appearance and colors.
+
 ## Credits
 
 - Denis Brizov for his [NaughtyAttributes](https://github.com/dbrizov/NaughtyAttributes)

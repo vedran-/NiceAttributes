@@ -11,9 +11,9 @@ namespace NiceAttributes
     {
         private static readonly Color _bgProSkin = new Color32(56, 56, 56, 255),
             _bgFreeSkin = new Color32(194, 194, 194, 255);
-        private static GUIStyle _fillRectTextureStyle, _fillRoundedRectTextureStyle;
         private static readonly Color _headerBgColor = new Color32( 3, 45, 53, 255 );
-        
+
+
         
         public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? _bgProSkin : _bgFreeSkin;
         //public static Color bgColorToRed = Color.Lerp( GUI.skin.window.normal.background.GetPixel( 0, 0 ), Color.red, 0.10f );
@@ -31,42 +31,18 @@ namespace NiceAttributes
             DrawVerticalLine( rect.xMax, rect.y, rect.height, color, thickness );
         }
 
-        public static void FillRect( Rect rect, Color color, GUIContent content = null )
+        public static void FillRect(Rect rect, Color color, GUIContent content = null, GUIStyle style = null)
         {
-            if (_fillRectTextureStyle == null )
-            {
-                var texture = EditorGUIUtility.whiteTexture;
-                var style = new GUIStyle();
-                style.normal.background = texture;
-                _fillRectTextureStyle = style;
-            }
-
             var backgroundColor = GUI.backgroundColor;
             GUI.backgroundColor = color;
-            GUI.Box( rect, content ?? GUIContent.none, _fillRectTextureStyle );
+            GUI.Box(rect, content ?? GUIContent.none, style ?? GUIStyles.FullRect);
             GUI.backgroundColor = backgroundColor;
         }
 
-        public static void FillRoundedRect( Rect rect, Color color, GUIContent content = null )
-        {
-            if (_fillRoundedRectTextureStyle == null )
-            {
-                // Find ButtonBlue.png texture in Unity Editor resources
-                var guids = AssetDatabase.FindAssets( "ButtonBlue t:Sprite" );
-                if( guids.Length > 0 )
-                {
-                    var path = AssetDatabase.GUIDToAssetPath( guids[0] );
-                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>( path );
-                    var style = SplicedSpriteToGUIStyle(sprite);
-                    _fillRoundedRectTextureStyle = style;
-                }
-            }
-
-            var backgroundColor = GUI.backgroundColor;
-            GUI.backgroundColor = color;
-            GUI.Box( rect, content ?? GUIContent.none, _fillRoundedRectTextureStyle );
-            GUI.backgroundColor = backgroundColor;
-        }
+        public static void FillRoundedRect(Rect rect, Color color, GUIContent content = null) =>
+            FillRect(rect, color, content, GUIStyles.RoundedRect);
+        public static void FillRoundedTopRect(Rect rect, Color color, GUIContent content = null) =>
+            FillRect(rect, color, content, GUIStyles.RoundedTopRect);
 
 
         /// <summary>
@@ -77,7 +53,7 @@ namespace NiceAttributes
         /// <param name="guiStyle"></param>
         /// <param name="textColor"></param>
         /// <param name="shadowColor"></param>
-        /// <param name="setCellValue">If set, then we'll allow label text to be edited</param>
+        /// <param name="setCellValue">If set, then we'll allow label text to be edited, and this method will be called when text value changes.</param>
         public static void DrawLabel( Rect rect, string text, GUIStyle guiStyle, 
             Color? textColor = null, Color? shadowColor = null, 
             Action<string> setCellValue = null )
@@ -150,25 +126,26 @@ namespace NiceAttributes
 
         private static string RemoveColorRichTextTags( string str ) => Regex.Replace( str, @"\<(\/)?color(=""?#?\w+""?)?\>", "" );
 
-        public static GUIStyle SplicedSpriteToGUIStyle(Sprite sprite)
+        public static GUIStyle GUIStyleFromSplicedSprite(Sprite sprite)
         {
-            var style = new GUIStyle(GUI.skin.button);
-            style.normal.scaledBackgrounds = new Texture2D[] { sprite.texture };
-            style.hover.scaledBackgrounds = new Texture2D[] { sprite.texture };
-            style.active.scaledBackgrounds = new Texture2D[] { sprite.texture };
-            style.focused.scaledBackgrounds = new Texture2D[] { sprite.texture };
+            var style = new GUIStyle();
+            style.clipping = TextClipping.Clip;
+            style.alignment = TextAnchor.MiddleCenter;
+            style.imagePosition = ImagePosition.ImageLeft;
+            style.normal.background = sprite.texture;
+            style.normal.textColor = Color.white;
             style.border = new RectOffset(
                 Mathf.RoundToInt(sprite.border.x), 
                 Mathf.RoundToInt(sprite.border.z), 
                 Mathf.RoundToInt(sprite.border.w), 
                 Mathf.RoundToInt(sprite.border.y)
             );
-            //style.overflow = new RectOffset(0, 0, -1, 2);
-            style.overflow = style.border;
-            //style.stretchWidth = true;
-            //style.stretchHeight = true;
-            style.padding = new RectOffset(8, 8, 8, 8);
-            //style.imagePosition = 
+            style.stretchWidth = true;
+            style.stretchHeight = true;
+            style.richText = true;
+            style.padding = new RectOffset(4, 4, 2, 2);
+            //style.margin = new RectOffset(20, 0, 8, 0);
+            //style.overflow = new RectOffset(0, 0, -5, -5);
             return style;
         }
         
@@ -192,42 +169,23 @@ namespace NiceAttributes
             }
         }
 
-        public static void DrawHeader( string label, bool fitWidth = false, BaseGroupAttribute groupAttr = null )
+        public static void DrawHeader(string label, bool fitWidth = false, BaseGroupAttribute groupAttr = null)
         {
-            var size = EditorStyles.boldLabel.CalcSize( new GUIContent( label ) );
+            var size = EditorStyles.boldLabel.CalcSize(new GUIContent(label));
 
-            var rect = fitWidth 
-                ? EditorGUILayout.GetControlRect( GUILayout.MaxWidth( size.x ), GUILayout.MaxHeight( size.y ) )
-                : EditorGUILayout.GetControlRect( GUILayout.MaxHeight( size.y ) );
-            var bgRect = fitWidth ? rect.Grow( 3, 3, 3, 3 ) : rect.Grow( 3, 3, 3, 0 );
-            var bgCol = groupAttr == null || !groupAttr.TitleBackColor.HasValue() ? _headerBgColor : groupAttr.TitleBackColor.ToColor();
-            FillRect( bgRect, bgCol );
+            var rect = fitWidth
+                ? EditorGUILayout.GetControlRect(GUILayout.MaxWidth(size.x), GUILayout.MaxHeight(size.y))
+                : EditorGUILayout.GetControlRect(GUILayout.MaxHeight(size.y));
+            var bgRect = fitWidth ? rect.Grow(3, 3, 3, 3) : rect.Grow(3, 3, 3, 0);
+            var bgCol = groupAttr == null || !groupAttr.TitleBackColor.HasValue()
+                ? _headerBgColor
+                : groupAttr.TitleBackColor.ToColor();
+            FillRoundedRect(bgRect, bgCol);
 
-            if( !fitWidth ) rect.y -= 2;
+            if (!fitWidth) rect.y -= 2;
             var fgCol = groupAttr == null || !groupAttr.TitleColor.HasValue() ? Color.white : groupAttr.TitleColor.ToColor();
             var shadowCol = groupAttr == null || !groupAttr.TitleShadowColor.HasValue() ? Color.gray : groupAttr.TitleShadowColor.ToColor();
-            DrawLabel( rect, label, EditorStyles.boldLabel, fgCol, shadowCol );
-        }
-
-        public static void DrawTabHeader( TabGroupAttribute.TabParent tabParent )
-        {
-            // Check/create Tab header
-            tabParent.tabHeader ??= tabParent.tabGroups.Select(tg => tg.Title ?? tg.GroupName).ToArray();
-
-            var origBgColor = GUI.backgroundColor;
-            var origColor = GUI.color;
-            GUI.color = Color.white;
-            GUI.backgroundColor = Color.darkGoldenRod;
-            
-            var newIdx = GUILayout.Toolbar( tabParent.selectedTabIdx, tabParent.tabHeader );
-            if( newIdx != tabParent.selectedTabIdx )
-            {
-                tabParent.selectedTabIdx = newIdx;
-                EditorGUIUtility.editingTextField = false;
-            }
-            
-            GUI.backgroundColor = origBgColor;
-            GUI.color = origColor;
+            DrawLabel(rect, label, EditorStyles.boldLabel, fgCol, shadowCol);
         }
     }
 }
