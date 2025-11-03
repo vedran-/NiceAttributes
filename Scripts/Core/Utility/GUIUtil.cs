@@ -18,23 +18,17 @@ namespace NiceAttributes
         public static void DrawRect( Rect rect, Color color, float thickness = 1f )
         {
             DrawHorizontalLine( rect.x, rect.yMin, rect.width, color, thickness );
-            DrawHorizontalLine( rect.x, rect.yMax, rect.width, color, thickness );
+            DrawHorizontalLine( rect.x, rect.yMax-1, rect.width, color, thickness );
             DrawVerticalLine( rect.xMin, rect.y, rect.height, color, thickness );
-            DrawVerticalLine( rect.xMax, rect.y, rect.height, color, thickness );
+            DrawVerticalLine( rect.xMax-1, rect.y, rect.height, color, thickness );
         }
 
-        public static void FillRect(Rect rect, Color color, GUIContent content = null, GUIStyle style = null)
+        public static void FillRect(Rect rect, Color color) => EditorGUI.DrawRect( rect, color );
+        public static void FillRect(Rect rect, Color color, GUIContent content, GUIStyle style = null)
         {
-            if (style == null)
-            {
-                EditorGUI.DrawRect(rect, color);
-            }
-            else
-            {
-                PushBackgroundColor(color);
-                GUI.Box(rect, content ?? GUIContent.none, style);
-                PopBackgroundColor();
-            }
+            PushBackgroundColor(color);
+            GUI.Box(rect, content ?? GUIContent.none, style ?? GUIStyles.FullRect);
+            PopBackgroundColor();
         }
 
         public static void FillRoundedRect(Rect rect, Color color, GUIContent content = null) =>

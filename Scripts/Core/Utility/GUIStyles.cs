@@ -5,8 +5,23 @@ namespace NiceAttributes
 {
     public static class GUIStyles
     {
-        private static GUIStyle _roundedRectStyle, _roundedTopRectStyle, _roundedBottomRectStyle;
+        private static GUIStyle _fullRectStyle, _roundedRectStyle, _roundedTopRectStyle,
+            _roundedBottomRectStyle;
 
+        public static GUIStyle FullRect
+        {
+            get
+            {
+                if (_fullRectStyle == null)
+                {
+                    _fullRectStyle = new GUIStyle();
+                    _fullRectStyle.normal.background = EditorGUIUtility.whiteTexture;
+                }
+
+                return _fullRectStyle;
+            }
+        }
+        
         public static GUIStyle RoundedRect
         {
             get
