@@ -18,7 +18,7 @@ namespace NiceAttributes
 #if UNITY_EDITOR
         private const float PaddingLeftRight = 8f;
         private const float PaddingTopBottom = 8f;
-        private readonly Color DefaultBackgroundColor = new Color32(53, 52, 68, 255);
+        private static readonly Color DefaultBackgroundColor = new Color32(53, 52, 68, 255);
 
         public class TabParent
         {
@@ -44,7 +44,7 @@ namespace NiceAttributes
             return idx >= 0 ? tabParent.tabGroups[idx] : null;
         }
 
-        private static Rect DrawTabHeader(TabParent tabParent, Color bgColor)
+        private static Rect DrawTabHeader(TabParent tabParent)
         {
             // Check/create Tab header
             tabParent.tabHeader ??= tabParent.tabGroups.Select(tg => tg.Title ?? tg.GroupName).ToArray();
@@ -52,13 +52,12 @@ namespace NiceAttributes
             GUIUtil.PushColor(Color.white);
 
 #if !USE_OLD_TABGROUP_LOOK
-            var unselectedColor = Color.Lerp(bgColor, Color.black, 0.25f);
-
             var fullRect = GUILayoutUtility.GetRect(0, 20);
             var dx = fullRect.width / tabParent.tabGroups.Count;
             GUIUtil.DrawHorizontalLine(fullRect.x, fullRect.yMax - 1, fullRect.width-1, Color.black, 1f);
 
             var origBgColor = GUI.backgroundColor;
+            var origContentColor = GUI.contentColor;
             for (int idx = 0; idx < tabParent.tabHeader.Length; idx++)
             {
                 var rect = fullRect;
@@ -67,7 +66,12 @@ namespace NiceAttributes
 
                 var isSelected = idx == tabParent.selectedTabIdx;
                 if (!isSelected) rect.height--;
-                GUI.backgroundColor = isSelected ? bgColor : unselectedColor;
+                
+                var bgColor = tabParent.tabGroups[idx].GroupBackColor.HasValue() ? tabParent.tabGroups[idx].GroupBackColor.ToColor() : DefaultBackgroundColor;
+                if (!isSelected) bgColor = Color.Lerp(bgColor, Color.black, 0.25f);
+
+                GUI.backgroundColor = bgColor;
+                GUI.contentColor = tabParent.tabGroups[idx].TitleColor.HasValue() ? tabParent.tabGroups[idx].TitleColor.ToColor() : Color.white;
                 var tabName = isSelected ? $"<u>{tabParent.tabHeader[idx]}</u>" : tabParent.tabHeader[idx];
                 if (GUIUtil.InstantClickButton(rect, tabName, GUIStyles.RoundedTopRect))
                 {
@@ -78,6 +82,7 @@ namespace NiceAttributes
                 EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
             }
             GUI.backgroundColor = origBgColor;
+            GUI.contentColor = origContentColor;
 #else
             var newIdx = GUILayout.Toolbar( tabParent.selectedTabIdx, tabParent.tabHeader );
             if( newIdx != tabParent.selectedTabIdx )
@@ -102,7 +107,7 @@ namespace NiceAttributes
             GUILayout.Space(4);
 
             var bgColor = GroupBackColor.HasValue() ? GroupBackColor.ToColor() : DefaultBackgroundColor;
-            var headerRect = DrawTabHeader(tabParent, bgColor);
+            var headerRect = DrawTabHeader(tabParent);
 
             // Setup client area
             var clientRect = EditorGUILayout.BeginHorizontal();

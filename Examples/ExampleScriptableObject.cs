@@ -63,13 +63,13 @@ namespace NiceAttributes.Examples
         [Button] void A() {}
 
 
-        [TabGroup("A/B/H/Sizes", GroupBackColor = (NiceColor)0xffff000)]
+        [TabGroup("A/B/H/Sizes", GroupBackColor = (NiceColor)0xffff00FF, TitleColor = NiceColor.Black)]
 #pragma warning disable CS0414 // Field is assigned but its value is never used
         [Show] private int a = 3;
 #pragma warning restore CS0414 // Field is assigned but its value is never used
         [TabGroup("A/B/H/Mines")]
         [Show] private string b => "Uga!";
-        [TabGroup("A/B/H/Buttons")]
+        [TabGroup("A/B/H/Buttons", GroupBackColor = NiceColor.Indigo)]
         [Button] private int c() => 4;
         [Show] private int d => 5;
         [Show] private int e => 6;
