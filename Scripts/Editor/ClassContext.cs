@@ -15,7 +15,7 @@ namespace NiceAttributes.Editor
     {
         private const BindingFlags AllBindingFields = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly;
         private static readonly Type[] SkipTypes = new Type[] { typeof(UnityEngine.Object), typeof(ScriptableObject), typeof(MonoBehaviour) };
-        private static readonly Color BgNonSerialized = Color.Lerp(DrawingUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f);
+        private static readonly Color BgNonSerialized = Color.Lerp(GUIUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f);
         
         public bool             HasNiceAttributes { get; private set; } = false;
 
@@ -590,7 +590,7 @@ namespace NiceAttributes.Editor
 
             // Non-serialized properties will have slightly reddish background
             if( item.serializedProperty == null && !(item.memberInfo is MethodInfo) ) {
-                DrawingUtil.FillRect( itemRect, BgNonSerialized );
+                GUIUtil.FillRect( itemRect, BgNonSerialized );
             }
 
             // Draw error message, if any

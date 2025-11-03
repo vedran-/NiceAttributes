@@ -1,22 +1,14 @@
 #if UNITY_EDITOR
 using System;
-using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEditor;
 using UnityEngine;
 
 namespace NiceAttributes
 {
-    public static class DrawingUtil
+    public static partial class GUIUtil
     {
-        private static readonly Color _bgProSkin = new Color32(56, 56, 56, 255),
-            _bgFreeSkin = new Color32(194, 194, 194, 255);
         private static readonly Color _headerBgColor = new Color32( 3, 45, 53, 255 );
-
-
-        
-        public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? _bgProSkin : _bgFreeSkin;
-        //public static Color bgColorToRed = Color.Lerp( GUI.skin.window.normal.background.GetPixel( 0, 0 ), Color.red, 0.10f );
 
         public static void DrawHorizontalLine( float x, float y, float width, Color color, float thickness = 1 ) 
             => FillRect( new Rect( x, y - thickness/2f, width, thickness ), color );
@@ -33,10 +25,16 @@ namespace NiceAttributes
 
         public static void FillRect(Rect rect, Color color, GUIContent content = null, GUIStyle style = null)
         {
-            var backgroundColor = GUI.backgroundColor;
-            GUI.backgroundColor = color;
-            GUI.Box(rect, content ?? GUIContent.none, style ?? GUIStyles.FullRect);
-            GUI.backgroundColor = backgroundColor;
+            if (style == null)
+            {
+                EditorGUI.DrawRect(rect, color);
+            }
+            else
+            {
+                PushBackgroundColor(color);
+                GUI.Box(rect, content ?? GUIContent.none, style);
+                PopBackgroundColor();
+            }
         }
 
         public static void FillRoundedRect(Rect rect, Color color, GUIContent content = null) =>
@@ -44,6 +42,33 @@ namespace NiceAttributes
         public static void FillRoundedTopRect(Rect rect, Color color, GUIContent content = null) =>
             FillRect(rect, color, content, GUIStyles.RoundedTopRect);
 
+        public static bool InstantClickButton(Rect rect, string text, GUIStyle style = null)
+        {
+#if false
+            return GUI.Button(rect, text, style ?? GUI.skin.button);
+#elif true
+            GUI.Box(rect, text, style ?? GUI.skin.button);
+            var e = Event.current;
+            if (e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition))
+            {
+                e.Use();
+                return true;
+            }
+            return false;
+#else
+            GUI.Box(rect, text, style ?? GUI.skin.button);
+            int id = GUIUtility.GetControlID(FocusType.Passive);
+            if (Event.current.GetTypeForControl(id) == EventType.MouseDown
+                && Event.current.button == 0
+                && rect.Contains(Event.current.mousePosition))
+            {
+                e.Use();
+                return true;
+            }
+            return false;
+#endif
+        }
+        
 
         /// <summary>
         /// Draws a label with optional shadow and editable text field.
@@ -64,12 +89,11 @@ namespace NiceAttributes
             // If we can set value of the cell - show TextField so user can edit the value
             if( setCellValue != null )
             {
-                var origColor = GUI.color;
-                GUI.color = textCol;                
+                PushColor(textCol);
                 var newText = GUI.TextField( rect, text, guiStyle );
                 if( newText != text ) setCellValue( newText );
                 GUI.contentColor = origContentColor;
-                GUI.color = origColor;
+                PopColor();
 
                 // Draw small gray rectangle, so user will know that this field is editable
                 rect.xMin--; rect.yMin--; rect.xMax++; rect.yMax++;

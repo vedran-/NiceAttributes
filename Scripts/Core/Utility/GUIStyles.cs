@@ -5,22 +5,7 @@ namespace NiceAttributes
 {
     public static class GUIStyles
     {
-        private static GUIStyle _fullRectStyle, _roundedRectStyle, _roundedTopRectStyle,
-            _roundedBottomRectStyle;
-
-        public static GUIStyle FullRect
-        {
-            get
-            {
-                if (_fullRectStyle == null)
-                {
-                    _fullRectStyle = new GUIStyle();
-                    _fullRectStyle.normal.background = EditorGUIUtility.whiteTexture;
-                }
-
-                return _fullRectStyle;
-            }
-        }
+        private static GUIStyle _roundedRectStyle, _roundedTopRectStyle, _roundedBottomRectStyle;
 
         public static GUIStyle RoundedRect
         {
@@ -33,7 +18,7 @@ namespace NiceAttributes
                     {
                         var path = AssetDatabase.GUIDToAssetPath(guids[0]);
                         var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                        _roundedRectStyle = DrawingUtil.GUIStyleFromSplicedSprite(sprite);
+                        _roundedRectStyle = GUIUtil.GUIStyleFromSplicedSprite(sprite);
                     }
                 }
 
@@ -50,7 +35,7 @@ namespace NiceAttributes
                 {
                     var path = AssetDatabase.GUIDToAssetPath(guids[0]);
                     var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                    _roundedTopRectStyle = DrawingUtil.GUIStyleFromSplicedSprite(sprite);
+                    _roundedTopRectStyle = GUIUtil.GUIStyleFromSplicedSprite(sprite);
                 }
 
                 return _roundedTopRectStyle;
@@ -66,7 +51,7 @@ namespace NiceAttributes
                 {
                     var path = AssetDatabase.GUIDToAssetPath(guids[0]);
                     var sprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                    _roundedBottomRectStyle = DrawingUtil.GUIStyleFromSplicedSprite(sprite);
+                    _roundedBottomRectStyle = GUIUtil.GUIStyleFromSplicedSprite(sprite);
                 }
 
                 return _roundedBottomRectStyle;

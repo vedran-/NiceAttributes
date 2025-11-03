@@ -23,12 +23,12 @@ namespace NiceAttributes
             _drawRect = UnityEditor.EditorGUILayout.BeginVertical( GUI.skin.box );
 
             // Fill the background, if set
-            if( GroupBackColor.HasValue() ) DrawingUtil.FillRect( _drawRect, GroupBackColor.ToColor() );
+            if( GroupBackColor.HasValue() ) GUIUtil.FillRect( _drawRect, GroupBackColor.ToColor() );
 
 
             // Show the label
             var label = GetLabel();
-            if( !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
+            if( !string.IsNullOrEmpty( label ) ) GUIUtil.DrawHeader( label, groupAttr: this );
 
             return true;
         }
@@ -38,7 +38,7 @@ namespace NiceAttributes
             UnityEditor.EditorGUILayout.EndVertical();
 
             // Draw bounding rect
-            DrawingUtil.DrawRect( _drawRect, Color.black );
+            GUIUtil.DrawRect( _drawRect, Color.black );
         }
 #endif
     }

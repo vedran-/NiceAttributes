@@ -4,7 +4,6 @@ using System.Diagnostics;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using UnityEditor;
-using UnityEditor.Experimental.GraphView;
 using UnityEngine;
 
 namespace NiceAttributes
@@ -19,7 +18,7 @@ namespace NiceAttributes
 #if UNITY_EDITOR
         private const float PaddingLeftRight = 8f;
         private const float PaddingTopBottom = 8f;
-        private Color DefaultBackgroundColor = new Color32(53, 52, 68, 255);
+        private readonly Color DefaultBackgroundColor = new Color32(53, 52, 68, 255);
 
         public class TabParent
         {
@@ -46,53 +45,50 @@ namespace NiceAttributes
             return idx >= 0 ? tabParent.tabGroups[idx] : null;
         }
 
-        private static void DrawTabHeader( TabParent tabParent, Color bgColor )
+        private static void DrawTabHeader(TabParent tabParent, Color bgColor)
         {
             // Check/create Tab header
             tabParent.tabHeader ??= tabParent.tabGroups.Select(tg => tg.Title ?? tg.GroupName).ToArray();
 
-            var origBgColor = GUI.backgroundColor;
-            var origColor = GUI.color;
-            GUI.color = Color.white;
+            GUIUtil.PushColor(Color.white);
+
+#if !USE_OLD_TABGROUP_LOOK
+            var unselectedColor = Color.Lerp(bgColor, Color.black, 0.25f);
 
             var fullRect = GUILayoutUtility.GetRect(0, 20);
             var dx = fullRect.width / tabParent.tabGroups.Count;
+            GUIUtil.DrawHorizontalLine(fullRect.x, fullRect.yMax - 1, fullRect.width, Color.black, 1f);
+
+            var origBgColor = GUI.backgroundColor;
             for (int idx = 0; idx < tabParent.tabHeader.Length; idx++)
             {
-                var isSelected = idx == tabParent.selectedTabIdx;
-                //var style = isSelected ? GUIStyles.RoundedTopRect : GUIStyles.RoundedRect;
                 var rect = fullRect;
                 rect.x += dx * idx;
                 rect.width = dx;
 
-                GUI.backgroundColor = isSelected ? bgColor : Color.Lerp(bgColor, Color.black, 0.2f);
-
-
-#if true
-                if (GUI.RepeatButton(rect, tabParent.tabHeader[idx], GUIStyles.RoundedTopRect))
-#elif true
-                if (GUI.Button(rect, tabParent.tabHeader[idx], GUIStyles.RoundedTopRect))
-#elif true
-                GUI.Button(rect, tabParent.tabHeader[idx], GUIStyles.RoundedTopRect);
-                if (Event.current.type == EventType.MouseDown 
-                    && Event.current.button == 0
-                    && rect.Contains(Event.current.mousePosition))
-#endif
+                var isSelected = idx == tabParent.selectedTabIdx;
+                if (!isSelected) rect.height--;
+                GUI.backgroundColor = isSelected ? bgColor : unselectedColor;
+                var tabName = isSelected ? $"<u>{tabParent.tabHeader[idx]}</u>" : tabParent.tabHeader[idx];
+                if (GUIUtil.InstantClickButton(rect, tabName, GUIStyles.RoundedTopRect))
                 {
                     tabParent.selectedTabIdx = idx;
                     if (EditorGUIUtility.editingTextField) EditorGUIUtility.editingTextField = false;
+                    Event.current.Use();
                 }
+                EditorGUIUtility.AddCursorRect(rect, MouseCursor.Link);
             }
-
-            // var newIdx = GUILayout.Toolbar( tabParent.selectedTabIdx, tabParent.tabHeader );
-            // if( newIdx != tabParent.selectedTabIdx )
-            // {
-            //     tabParent.selectedTabIdx = newIdx;
-            //     EditorGUIUtility.editingTextField = false;
-            // }
-            
             GUI.backgroundColor = origBgColor;
-            GUI.color = origColor;
+#else
+            var newIdx = GUILayout.Toolbar( tabParent.selectedTabIdx, tabParent.tabHeader );
+            if( newIdx != tabParent.selectedTabIdx )
+            {
+                tabParent.selectedTabIdx = newIdx;
+                EditorGUIUtility.editingTextField = false;
+            }
+#endif
+
+            GUIUtil.PopColor();
         }
 
 
@@ -105,15 +101,13 @@ namespace NiceAttributes
             _tabRect = EditorGUILayout.BeginVertical();
             GUILayout.Space(4);
 
-            var bgColor = GroupBackColor.HasValue() ? GroupBackColor.ToColor() 
-                : DefaultBackgroundColor;
-
+            var bgColor = GroupBackColor.HasValue() ? GroupBackColor.ToColor() : DefaultBackgroundColor;
             DrawTabHeader(tabParent, bgColor);
 
             // Setup client area
             var clientRect = EditorGUILayout.BeginHorizontal();
             
-            DrawingUtil.FillRect(clientRect, bgColor, null, GUIStyles.RoundedBottomRect);
+            GUIUtil.FillRect(clientRect, bgColor, null, GUIStyles.RoundedBottomRect);
             
             GUILayout.Space(PaddingLeftRight);
             EditorGUILayout.BeginVertical();

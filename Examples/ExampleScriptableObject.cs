@@ -78,18 +78,18 @@ namespace NiceAttributes.Examples
         private void OnPreGUI()
         {
             var rect = GUILayoutUtility.GetRect(0, 22);
-            DrawingUtil.FillRoundedRect(rect, Color.black, new GUIContent("This red square is drawn from OnPreGUI() method"));
-            //DrawingUtil.DrawLabel(rect, "This red square is drawn from OnPreGUI() method", new GUIStyle("box"), Color.white, Color.black);
-            DrawingUtil.DrawRect(rect, Color.cyan, 1);
+            GUIUtil.FillRoundedRect(rect, Color.black, new GUIContent("This red square is drawn from OnPreGUI() method"));
+            //GUIUtil.DrawLabel(rect, "This red square is drawn from OnPreGUI() method", new GUIStyle("box"), Color.white, Color.black);
+            GUIUtil.DrawRect(rect, Color.cyan, 1);
         }
         private void OnPostGUI()
         {
             var rect = GUILayoutUtility.GetRect(0, 60);
-            DrawingUtil.DrawCheckeredRect(rect, color: Color.blueViolet);
-            DrawingUtil.DrawLabel(rect, "This checkered area is drawn from OnPostGUI() method", 
+            GUIUtil.DrawCheckeredRect(rect, color: Color.blueViolet);
+            GUIUtil.DrawLabel(rect, "This checkered area is drawn from OnPostGUI() method", 
                 new GUIStyle("box"), Color.white, Color.black);
-            //DrawingUtil.FillRect(rect, Color.blueViolet, new GUIContent("This is drawn from OnPostGUI() method"));
-            DrawingUtil.DrawRect(rect, Color.greenYellow, 1);
+            //GUIUtil.FillRect(rect, Color.blueViolet, new GUIContent("This is drawn from OnPostGUI() method"));
+            GUIUtil.DrawRect(rect, Color.greenYellow, 1);
         }
     }
 }

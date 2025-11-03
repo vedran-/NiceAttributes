@@ -18,10 +18,10 @@ namespace NiceAttributes
             var rect = EditorGUILayout.BeginVertical();
 
             // Fill the background, if set
-            if( GroupBackColor.HasValue() ) DrawingUtil.FillRect( rect, GroupBackColor.ToColor() );
+            if( GroupBackColor.HasValue() ) GUIUtil.FillRect( rect, GroupBackColor.ToColor() );
 
             var label = GetLabel();
-            if( !string.IsNullOrEmpty( label ) ) DrawingUtil.DrawHeader( label, groupAttr: this );
+            if( !string.IsNullOrEmpty( label ) ) GUIUtil.DrawHeader( label, groupAttr: this );
             return true;
         }
 
