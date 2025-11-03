@@ -104,7 +104,7 @@ private PrivateNonSerialized b; // Not shown in inspector - field is private, so
 ```
 
 ## Problems
- - InfoBox inside groups does not work properly yet.
+ - InfoBox, Header, on fields inside groups (TabGroup etc.) does not work properly yet.
  - Improve TabGroup / BoxGroup / FoldoutGroup appearance and colors.
 
 ## Credits

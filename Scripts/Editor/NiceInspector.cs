@@ -43,7 +43,7 @@ namespace NiceAttributes.Editor
         public override void OnInspectorGUI()
         {
             // If the class we need to display doesn't use NiceAttributes, then just use the default Inspector
-            if( _rootClass == null || !_rootClass.HasNiceAttributes )
+            if (_rootClass == null || !_rootClass.HasNiceAttributes || !GlobalConfig.EnableNiceAttributes)
             {
                 DrawDefaultInspector();
                 return;

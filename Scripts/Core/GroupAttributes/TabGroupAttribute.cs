@@ -29,7 +29,6 @@ namespace NiceAttributes
 
         public TabParent tabParent = null;
         private bool IsSelectedTab => GetSelectedTab() == this;
-        private Rect _tabRect;
 
         private int GetSelectedTabIdx()
         {
@@ -45,7 +44,7 @@ namespace NiceAttributes
             return idx >= 0 ? tabParent.tabGroups[idx] : null;
         }
 
-        private static void DrawTabHeader(TabParent tabParent, Color bgColor)
+        private static Rect DrawTabHeader(TabParent tabParent, Color bgColor)
         {
             // Check/create Tab header
             tabParent.tabHeader ??= tabParent.tabGroups.Select(tg => tg.Title ?? tg.GroupName).ToArray();
@@ -57,7 +56,7 @@ namespace NiceAttributes
 
             var fullRect = GUILayoutUtility.GetRect(0, 20);
             var dx = fullRect.width / tabParent.tabGroups.Count;
-            GUIUtil.DrawHorizontalLine(fullRect.x, fullRect.yMax - 1, fullRect.width, Color.black, 1f);
+            GUIUtil.DrawHorizontalLine(fullRect.x, fullRect.yMax - 1, fullRect.width-1, Color.black, 1f);
 
             var origBgColor = GUI.backgroundColor;
             for (int idx = 0; idx < tabParent.tabHeader.Length; idx++)
@@ -89,6 +88,7 @@ namespace NiceAttributes
 #endif
 
             GUIUtil.PopColor();
+            return fullRect;
         }
 
 
@@ -98,14 +98,15 @@ namespace NiceAttributes
             if (!IsSelectedTab) return false;
 
             // Draw Tab Header
-            _tabRect = EditorGUILayout.BeginVertical();
+            EditorGUILayout.BeginVertical();
             GUILayout.Space(4);
 
             var bgColor = GroupBackColor.HasValue() ? GroupBackColor.ToColor() : DefaultBackgroundColor;
-            DrawTabHeader(tabParent, bgColor);
+            var headerRect = DrawTabHeader(tabParent, bgColor);
 
             // Setup client area
             var clientRect = EditorGUILayout.BeginHorizontal();
+            clientRect.width = headerRect.width-1;
             
             GUIUtil.FillRect(clientRect, bgColor, null, GUIStyles.RoundedBottomRect);
             

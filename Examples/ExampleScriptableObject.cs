@@ -80,7 +80,7 @@ namespace NiceAttributes.Examples
             var rect = GUILayoutUtility.GetRect(0, 22);
             GUIUtil.FillRoundedRect(rect, Color.black, new GUIContent("This red square is drawn from OnPreGUI() method"));
             //GUIUtil.DrawLabel(rect, "This red square is drawn from OnPreGUI() method", new GUIStyle("box"), Color.white, Color.black);
-            GUIUtil.DrawRect(rect, Color.cyan, 5);
+            GUIUtil.DrawRect(rect, Color.cyan, 1);
         }
         private void OnPostGUI()
         {
