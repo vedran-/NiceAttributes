@@ -11,10 +11,13 @@ namespace NiceAttributes
     [Conditional("UNITY_EDITOR")]
     public class TabGroupAttribute : BaseGroupAttribute
     {
-        public TabGroupAttribute( string groupName = "", [CallerLineNumber] int lineNumber = 0 ) 
-            : base( groupName, lineNumber ) {}
+        public TabGroupAttribute(string groupName = "", [CallerLineNumber] int lineNumber = 0)
+            : base(groupName, lineNumber) {}
 
 #if UNITY_EDITOR
+        private const float PaddingLeftRight = 8f;
+        private const float PaddingTopBottom = 4f;
+
         public class TabParent
         {
             public List<TabGroupAttribute>  tabGroups = null;
@@ -23,63 +26,58 @@ namespace NiceAttributes
         }
 
         public TabParent tabParent = null;
-        bool IsSelectedTab => GetSelectedTab() == this;
-        Rect tabRect;
+        private bool IsSelectedTab => GetSelectedTab() == this;
+        private Rect _tabRect;
 
-        #region GetSelectedTabIdx()
-        int GetSelectedTabIdx()
+        private int GetSelectedTabIdx()
         {
             if( tabParent == null || tabParent.tabGroups == null || tabParent.tabGroups.Count == 0 ) return -1;
             if( tabParent.selectedTabIdx >= tabParent.tabGroups.Count ) tabParent.selectedTabIdx = tabParent.tabGroups.Count - 1;
             if( tabParent.selectedTabIdx < 0 ) tabParent.selectedTabIdx = 0;
             return tabParent.selectedTabIdx;
         }
-        #endregion GetSelectedTabIdx()
-        #region GetSelectedTab()
-        TabGroupAttribute GetSelectedTab()
+
+        private TabGroupAttribute GetSelectedTab()
         {
             var idx = GetSelectedTabIdx();
             return idx >= 0 ? tabParent.tabGroups[idx] : null;
         }
-        #endregion GetSelectedTab()
 
 
-        #region OnGUI_GroupStart()
         private protected override bool OnGUI_GroupStart()
         {
             // Draw tab group only when selected in parent
             if( !IsSelectedTab ) return false;
 
             // Draw Tab Header
-            tabRect = EditorGUILayout.BeginVertical();
+            _tabRect = EditorGUILayout.BeginVertical();
 
             // Fill the background, if set
-            if( GroupBackColor.HasValue() ) DrawingUtil.FillRect( tabRect, GroupBackColor.ToColor() );
+            if( GroupBackColor.HasValue() ) DrawingUtil.FillRect( _tabRect, GroupBackColor.ToColor() );
 
             DrawingUtil.DrawTabHeader( tabParent );
 
-            // Draw client area
-            var rect = EditorGUILayout.BeginVertical();
+            // Setup client area
+            EditorGUILayout.BeginHorizontal();
+            GUILayout.Space(PaddingLeftRight);
+            EditorGUILayout.BeginVertical();
+            GUILayout.Space(PaddingTopBottom);
 
             return true;
         }
-        #endregion OnGUI_GroupStart()
 
-        #region OnGUI_GroupEnd()
         private protected override void OnGUI_GroupEnd()
         {
             if( !IsSelectedTab ) return;
 
-            // Calculate number of items drawn by using ControlID - it increases with each control drawn
-            //lastItemsDrawn = GUIUtility.GetControlID( FocusType.Passive ) - lastStartId;
-
+            GUILayout.Space(PaddingTopBottom);
             EditorGUILayout.EndVertical();
-            GUILayout.Space( 3 );
+            GUILayout.Space(PaddingLeftRight);
+            EditorGUILayout.EndHorizontal();
             EditorGUILayout.EndVertical();
 
-            DrawingUtil.DrawRect( tabRect, Color.black, 2 );
+            DrawingUtil.DrawRect( _tabRect, Color.black, 2 );
         }
-        #endregion OnGUI_GroupEnd()
 #endif
     }
 }

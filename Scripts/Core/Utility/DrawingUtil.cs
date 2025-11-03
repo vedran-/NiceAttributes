@@ -10,17 +10,18 @@ namespace NiceAttributes
     public static class DrawingUtil
     {
         private static readonly Color _bgProSkin = new Color32(56, 56, 56, 255),
-            _bgPoorSkin = new Color32(194, 194, 194, 255);
-        private static Texture2D _fillRectBackgroundTexture;
-        private static GUIStyle _fillRectTextureStyle;
+            _bgFreeSkin = new Color32(194, 194, 194, 255);
+        private static GUIStyle _fillRectTextureStyle, _fillRoundedRectTextureStyle;
         private static readonly Color _headerBgColor = new Color32( 3, 45, 53, 255 );
         
         
-        public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? _bgProSkin : _bgPoorSkin;
+        public static Color GetDefaultBackgroundColor() => EditorGUIUtility.isProSkin ? _bgProSkin : _bgFreeSkin;
         //public static Color bgColorToRed = Color.Lerp( GUI.skin.window.normal.background.GetPixel( 0, 0 ), Color.red, 0.10f );
 
-        public static void DrawHorizontalLine( float x, float y, float width, Color color, float thickness = 1 ) => FillRect( new Rect( x, y-thickness/2f, width, thickness ), color );
-        public static void DrawVerticalLine( float x, float y, float height, Color color, float thickness = 1 ) => FillRect( new Rect( x - thickness / 2f, y, thickness, height ), color );
+        public static void DrawHorizontalLine( float x, float y, float width, Color color, float thickness = 1 ) 
+            => FillRect( new Rect( x, y - thickness/2f, width, thickness ), color );
+        public static void DrawVerticalLine( float x, float y, float height, Color color, float thickness = 1 ) 
+            => FillRect( new Rect( x - thickness/2f, y, thickness, height ), color );
 
         public static void DrawRect( Rect rect, Color color, float thickness = 1f )
         {
@@ -32,8 +33,13 @@ namespace NiceAttributes
 
         public static void FillRect( Rect rect, Color color, GUIContent content = null )
         {
-            if( !_fillRectBackgroundTexture ) _fillRectBackgroundTexture = Texture2D.whiteTexture;
-            if( _fillRectTextureStyle == null ) _fillRectTextureStyle = new GUIStyle { normal = new GUIStyleState { background = _fillRectBackgroundTexture } };
+            if (_fillRectTextureStyle == null )
+            {
+                var texture = EditorGUIUtility.whiteTexture;
+                var style = new GUIStyle();
+                style.normal.background = texture;
+                _fillRectTextureStyle = style;
+            }
 
             var backgroundColor = GUI.backgroundColor;
             GUI.backgroundColor = color;
@@ -41,16 +47,49 @@ namespace NiceAttributes
             GUI.backgroundColor = backgroundColor;
         }
 
+        public static void FillRoundedRect( Rect rect, Color color, GUIContent content = null )
+        {
+            if (_fillRoundedRectTextureStyle == null )
+            {
+                // Find ButtonBlue.png texture in Unity Editor resources
+                var guids = AssetDatabase.FindAssets( "ButtonBlue t:Sprite" );
+                if( guids.Length > 0 )
+                {
+                    var path = AssetDatabase.GUIDToAssetPath( guids[0] );
+                    var sprite = AssetDatabase.LoadAssetAtPath<Sprite>( path );
+                    var style = SplicedSpriteToGUIStyle(sprite);
+                    _fillRoundedRectTextureStyle = style;
+                }
+            }
 
-        public static void DrawLabel( Rect rect, string text, GUIStyle guiStyle, Color textColor, Color? shadowColor, Action<string> setCellValue = null )
+            var backgroundColor = GUI.backgroundColor;
+            GUI.backgroundColor = color;
+            GUI.Box( rect, content ?? GUIContent.none, _fillRoundedRectTextureStyle );
+            GUI.backgroundColor = backgroundColor;
+        }
+
+
+        /// <summary>
+        /// Draws a label with optional shadow and editable text field.
+        /// </summary>
+        /// <param name="rect">Drawing rectangle.</param>
+        /// <param name="text">Text to display (or edit).</param>
+        /// <param name="guiStyle"></param>
+        /// <param name="textColor"></param>
+        /// <param name="shadowColor"></param>
+        /// <param name="setCellValue">If set, then we'll allow label text to be edited</param>
+        public static void DrawLabel( Rect rect, string text, GUIStyle guiStyle, 
+            Color? textColor = null, Color? shadowColor = null, 
+            Action<string> setCellValue = null )
         {
             var origContentColor = GUI.contentColor;
+            var textCol = textColor ?? GUI.contentColor;
 
             // If we can set value of the cell - show TextField so user can edit the value
             if( setCellValue != null )
             {
                 var origColor = GUI.color;
-                GUI.color = textColor;                
+                GUI.color = textCol;                
                 var newText = GUI.TextField( rect, text, guiStyle );
                 if( newText != text ) setCellValue( newText );
                 GUI.contentColor = origContentColor;
@@ -69,13 +108,13 @@ namespace NiceAttributes
                 var rTxt = rect;
                 rect.x += 1f; rect.y += 0.5f;
                 GUI.contentColor = shadowColor.Value;
-                GUI.Label( rect, RemoveColorRichTextTags(text), guiStyle );
+                GUI.Label( rect, guiStyle.richText ? RemoveColorRichTextTags(text) : text, guiStyle );
                 // Draw text
-                GUI.contentColor = textColor;
+                GUI.contentColor = textCol;
                 GUI.Label( rTxt, text, guiStyle );
             } else {
                 // Draw normal text
-                GUI.contentColor = textColor;
+                GUI.contentColor = textCol;
                 GUI.Label( rect, text, guiStyle );
             }
 
@@ -111,7 +150,28 @@ namespace NiceAttributes
 
         private static string RemoveColorRichTextTags( string str ) => Regex.Replace( str, @"\<(\/)?color(=""?#?\w+""?)?\>", "" );
 
-
+        public static GUIStyle SplicedSpriteToGUIStyle(Sprite sprite)
+        {
+            var style = new GUIStyle(GUI.skin.button);
+            style.normal.scaledBackgrounds = new Texture2D[] { sprite.texture };
+            style.hover.scaledBackgrounds = new Texture2D[] { sprite.texture };
+            style.active.scaledBackgrounds = new Texture2D[] { sprite.texture };
+            style.focused.scaledBackgrounds = new Texture2D[] { sprite.texture };
+            style.border = new RectOffset(
+                Mathf.RoundToInt(sprite.border.x), 
+                Mathf.RoundToInt(sprite.border.z), 
+                Mathf.RoundToInt(sprite.border.w), 
+                Mathf.RoundToInt(sprite.border.y)
+            );
+            //style.overflow = new RectOffset(0, 0, -1, 2);
+            style.overflow = style.border;
+            //style.stretchWidth = true;
+            //style.stretchHeight = true;
+            style.padding = new RectOffset(8, 8, 8, 8);
+            //style.imagePosition = 
+            return style;
+        }
+        
 
         public static void DrawCheckeredRect( Rect rect, float xSize = 10, float ySize = 10, Color? color = null, float colorFactorTowardsWhite = 0.5f )
         {
@@ -154,12 +214,20 @@ namespace NiceAttributes
             // Check/create Tab header
             tabParent.tabHeader ??= tabParent.tabGroups.Select(tg => tg.Title ?? tg.GroupName).ToArray();
 
+            var origBgColor = GUI.backgroundColor;
+            var origColor = GUI.color;
+            GUI.color = Color.white;
+            GUI.backgroundColor = Color.darkGoldenRod;
+            
             var newIdx = GUILayout.Toolbar( tabParent.selectedTabIdx, tabParent.tabHeader );
             if( newIdx != tabParent.selectedTabIdx )
             {
                 tabParent.selectedTabIdx = newIdx;
                 EditorGUIUtility.editingTextField = false;
             }
+            
+            GUI.backgroundColor = origBgColor;
+            GUI.color = origColor;
         }
     }
 }

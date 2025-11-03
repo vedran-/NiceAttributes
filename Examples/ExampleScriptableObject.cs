@@ -9,7 +9,27 @@ namespace NiceAttributes.Examples
         [BoxGroup("BoxGroup: Serialized properties")]
         [field: SerializeField] private uint u02 { get; set; } = 1;
 
-        [Space(20)]
+        [TabGroup("Animals")]
+        public int animalsCount;
+        [TabGroup("Animals/Dogs", Title = "Dogs")]
+        public int dogsCount;
+        [TabGroup("Animals/Dogs", Title = "Dogs")]
+        public bool isDogHappy;
+        [TabGroup("Animals/Cats", Title = "Cats")]
+        public int catsCount;
+        [TabGroup("Animals/Cats", Title = "Cats")]
+        [InfoBox("This is private non-serialized field shown with [Show] attribute")]   // TODO: Make InfoBox work with Show/TabGroup attribute
+        [Show] private bool isCatHappy;
+
+        [TabGroup("Objects")]
+        public int objectsCount;
+        [TabGroup("Objects/Chairs", Title = "Chairs")]
+        public int chairsCount;
+        [TabGroup("Objects/Tables", Title = "Tables")]
+        public int tablesCount;
+        [TabGroup("Objects/Electronics", Title = "Electronics")]
+        public int electronicsCount;
+        
         public int a01;
 
         [BoxGroup("A", TitleColor = NiceColor.Green)] public int a02;
