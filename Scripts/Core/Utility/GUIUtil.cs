@@ -17,10 +17,10 @@ namespace NiceAttributes
 
         public static void DrawRect( Rect rect, Color color, float thickness = 1f )
         {
-            DrawHorizontalLine( rect.x, rect.yMin, rect.width, color, thickness );
-            DrawHorizontalLine( rect.x, rect.yMax-1, rect.width, color, thickness );
-            DrawVerticalLine( rect.xMin, rect.y, rect.height, color, thickness );
-            DrawVerticalLine( rect.xMax-1, rect.y, rect.height, color, thickness );
+            DrawHorizontalLine( rect.x, rect.yMin + 0.5f, rect.width, color, thickness );
+            DrawHorizontalLine( rect.x, rect.yMax - 0.5f, rect.width, color, thickness );
+            DrawVerticalLine( rect.xMin + 0.5f, rect.y, rect.height, color, thickness );
+            DrawVerticalLine( rect.xMax - 0.5f, rect.y, rect.height, color, thickness );
         }
 
         public static void FillRect(Rect rect, Color color) => EditorGUI.DrawRect( rect, color );
@@ -62,7 +62,7 @@ namespace NiceAttributes
             return false;
 #endif
         }
-        
+
 
         /// <summary>
         /// Draws a label with optional shadow and editable text field.
@@ -73,43 +73,48 @@ namespace NiceAttributes
         /// <param name="textColor"></param>
         /// <param name="shadowColor"></param>
         /// <param name="setCellValue">If set, then we'll allow label text to be edited, and this method will be called when text value changes.</param>
-        public static void DrawLabel( Rect rect, string text, GUIStyle guiStyle, 
-            Color? textColor = null, Color? shadowColor = null, 
-            Action<string> setCellValue = null )
+        public static void DrawLabel(Rect rect, string text, GUIStyle guiStyle,
+            Color? textColor = null, Color? shadowColor = null,
+            Action<string> setCellValue = null)
         {
-            var origContentColor = GUI.contentColor;
             var textCol = textColor ?? GUI.contentColor;
 
             // If we can set value of the cell - show TextField so user can edit the value
-            if( setCellValue != null )
+            if (setCellValue != null)
             {
                 PushColor(textCol);
-                var newText = GUI.TextField( rect, text, guiStyle );
-                if( newText != text ) setCellValue( newText );
-                GUI.contentColor = origContentColor;
+                var newText = GUI.TextField(rect, text, guiStyle);
+                if (newText != text) setCellValue(newText);
                 PopColor();
 
                 // Draw small gray rectangle, so user will know that this field is editable
-                rect.xMin--; rect.yMin--; rect.xMax++; rect.yMax++;
+                rect.xMin--;
+                rect.yMin--;
+                rect.xMax++;
+                rect.yMax++;
                 //rect.width = rect.height = 2;
-                DrawRect( rect, Color.gray );
+                DrawRect(rect, Color.gray);
                 return;
             }
 
-            if( shadowColor.HasValue )
+            var origContentColor = GUI.contentColor;
+            if (shadowColor.HasValue)
             {
                 // Draw shadow
                 var rTxt = rect;
-                rect.x += 1f; rect.y += 0.5f;
+                rect.x += 1f;
+                rect.y += 0.5f;
                 GUI.contentColor = shadowColor.Value;
-                GUI.Label( rect, guiStyle.richText ? RemoveColorRichTextTags(text) : text, guiStyle );
+                GUI.Label(rect, guiStyle.richText ? RemoveColorRichTextTags(text) : text, guiStyle);
                 // Draw text
                 GUI.contentColor = textCol;
-                GUI.Label( rTxt, text, guiStyle );
-            } else {
+                GUI.Label(rTxt, text, guiStyle);
+            }
+            else
+            {
                 // Draw normal text
                 GUI.contentColor = textCol;
-                GUI.Label( rect, text, guiStyle );
+                GUI.Label(rect, text, guiStyle);
             }
 
             GUI.contentColor = origContentColor;
@@ -121,7 +126,7 @@ namespace NiceAttributes
         /// </summary>
         /// <param name="minHeight"></param>
         /// <returns></returns>
-        public static Rect GetRectToFillWindow( float minHeight )
+        public static Rect GetRectToFillWindow(float minHeight)
         {
             var wasEnabled = GUI.enabled;
             GUI.enabled = false;
@@ -130,13 +135,13 @@ namespace NiceAttributes
             var scrollPosition = Vector2.zero;
 
             // Create ScrollView
-            GUILayout.BeginScrollView( scrollPosition, GUIStyle.none, GUIStyle.none );
+            GUILayout.BeginScrollView(scrollPosition, GUIStyle.none, GUIStyle.none);
             // Fill scroller to max height
-            GUILayoutUtility.GetRect( lastRect.width, minHeight );
+            GUILayoutUtility.GetRect(lastRect.width, minHeight);
             GUILayout.EndScrollView();
 
             // Now get rect with height=0, and we'll use its position to know where is bottom of the screen
-            var rect = GUILayoutUtility.GetRect( lastRect.width, 0 );
+            var rect = GUILayoutUtility.GetRect(lastRect.width, 0);
             rect.yMin = startPosY;
             GUI.enabled = wasEnabled;
             return rect;
@@ -166,23 +171,24 @@ namespace NiceAttributes
             //style.overflow = new RectOffset(0, 0, -5, -5);
             return style;
         }
-        
 
-        public static void DrawCheckeredRect( Rect rect, float xSize = 10, float ySize = 10, Color? color = null, float colorFactorTowardsWhite = 0.5f )
+
+        public static void DrawCheckeredRect(Rect rect, float xSize = 10, float ySize = 10, Color? color = null,
+            float colorFactorTowardsWhite = 0.5f)
         {
             Color col1 = color ?? Color.gray;
-            Color col2 = Color.Lerp( col1, Color.white, colorFactorTowardsWhite ).WithAlpha( col1.a );
-            EditorGUI.DrawRect( rect, col1 );
+            Color col2 = Color.Lerp(col1, Color.white, colorFactorTowardsWhite).WithAlpha(col1.a);
+            FillRect(rect, col1);
 
-            for( int y = 0; y < rect.height / ySize; y++ )
+            for (int y = 0; y < rect.height / ySize; y++)
             {
-                for( int x = 0; x < rect.width / xSize; x++ )
+                for (int x = 0; x < rect.width / xSize; x++)
                 {
-                    if( ((x ^ y) & 1) != 0 ) continue;
-                    var r = new Rect( rect.xMin + x * xSize, rect.yMin + y * ySize, xSize, ySize );
-                    if( r.xMax > rect.xMax ) r.xMax = rect.xMax;
-                    if( r.yMax > rect.yMax ) r.yMax = rect.yMax;
-                    EditorGUI.DrawRect( r, col2 );
+                    if (((x ^ y) & 1) != 0) continue;
+                    var r = new Rect(rect.xMin + x * xSize, rect.yMin + y * ySize, xSize, ySize);
+                    if (r.xMax > rect.xMax) r.xMax = rect.xMax;
+                    if (r.yMax > rect.yMax) r.yMax = rect.yMax;
+                    FillRect(r, col2);
                 }
             }
         }
