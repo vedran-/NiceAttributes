@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEditor;
 
 namespace NiceAttributes
@@ -19,3 +20,4 @@ namespace NiceAttributes
         }
     }
 }
+#endif

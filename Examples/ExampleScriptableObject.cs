@@ -75,6 +75,7 @@ namespace NiceAttributes.Examples
         [Show] private int e => 6;
 
 
+#if UNITY_EDITOR
         private void OnPreGUI()
         {
             var rect = GUILayoutUtility.GetRect(0, 22);
@@ -91,5 +92,6 @@ namespace NiceAttributes.Examples
             //GUIUtil.FillRect(rect, Color.blueViolet, new GUIContent("This is drawn from OnPostGUI() method"));
             GUIUtil.DrawRect(rect, Color.greenYellow, 1);
         }
+#endif
     }
 }

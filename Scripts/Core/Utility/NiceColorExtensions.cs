@@ -1,3 +1,4 @@
+#if UNITY_EDITOR
 using UnityEngine;
 
 namespace NiceAttributes
@@ -20,3 +21,4 @@ namespace NiceAttributes
         public static NiceColor ToEColor(this uint value) => (NiceColor)value;
     }
 }
+#endif

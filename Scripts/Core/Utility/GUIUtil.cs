@@ -1,7 +1,6 @@
 #if UNITY_EDITOR
 using System;
 using System.Text.RegularExpressions;
-using UnityEditor;
 using UnityEngine;
 
 namespace NiceAttributes
@@ -23,7 +22,8 @@ namespace NiceAttributes
             DrawVerticalLine( rect.xMax - 0.5f, rect.y, rect.height, color, thickness );
         }
 
-        public static void FillRect(Rect rect, Color color) => EditorGUI.DrawRect( rect, color );
+        public static void FillRect(Rect rect, Color color) => UnityEditor.EditorGUI.DrawRect( rect, color );
+
         public static void FillRect(Rect rect, Color color, GUIContent content, GUIStyle style = null)
         {
             PushBackgroundColor(color);
@@ -195,11 +195,11 @@ namespace NiceAttributes
 
         public static void DrawHeader(string label, bool fitWidth = false, BaseGroupAttribute groupAttr = null)
         {
-            var size = EditorStyles.boldLabel.CalcSize(new GUIContent(label));
+            var size = UnityEditor.EditorStyles.boldLabel.CalcSize(new GUIContent(label));
 
             var rect = fitWidth
-                ? EditorGUILayout.GetControlRect(GUILayout.MaxWidth(size.x), GUILayout.MaxHeight(size.y))
-                : EditorGUILayout.GetControlRect(GUILayout.MaxHeight(size.y));
+                ? UnityEditor.EditorGUILayout.GetControlRect(GUILayout.MaxWidth(size.x), GUILayout.MaxHeight(size.y))
+                : UnityEditor.EditorGUILayout.GetControlRect(GUILayout.MaxHeight(size.y));
             var bgRect = fitWidth ? rect.Grow(3, 3, 3, 3) : rect.Grow(3, 3, 3, 0);
             var bgCol = groupAttr == null || !groupAttr.TitleBackColor.HasValue()
                 ? _headerBgColor
@@ -209,7 +209,7 @@ namespace NiceAttributes
             if (!fitWidth) rect.y -= 2;
             var fgCol = groupAttr == null || !groupAttr.TitleColor.HasValue() ? Color.white : groupAttr.TitleColor.ToColor();
             var shadowCol = groupAttr == null || !groupAttr.TitleShadowColor.HasValue() ? Color.gray : groupAttr.TitleShadowColor.ToColor();
-            DrawLabel(rect, label, EditorStyles.boldLabel, fgCol, shadowCol);
+            DrawLabel(rect, label, UnityEditor.EditorStyles.boldLabel, fgCol, shadowCol);
         }
     }
 }
