@@ -83,40 +83,7 @@ namespace NiceAttributes.Editor.Utility
             }
 
             object target = GetTargetObjectWithProperty(property);
-
-            // deal with enum conditions
-            if (enableIfAttribute.EnumValue != null)
-            {
-                Enum value = GetEnumValue(target, enableIfAttribute.Conditions[0]);
-                if (value != null)
-                {
-                    bool matched = value.GetType().GetCustomAttribute<FlagsAttribute>() == null
-                        ? enableIfAttribute.EnumValue.Equals(value)
-                        : value.HasFlag(enableIfAttribute.EnumValue);
-
-                    return matched != enableIfAttribute.Inverted;
-                }
-
-                string message = enableIfAttribute.GetType().Name + " needs a valid enum field, property or method name to work";
-                Debug.LogWarning(message, property.serializedObject.targetObject);
-
-                return false;
-            }
-
-            // deal with normal conditions
-            List<bool> conditionValues = GetConditionValues(target, enableIfAttribute.Conditions);
-            if (conditionValues.Count > 0)
-            {
-                bool enabled = GetConditionsFlag(conditionValues, enableIfAttribute.ConditionOperator, enableIfAttribute.Inverted);
-                return enabled;
-            }
-            else
-            {
-                string message = enableIfAttribute.GetType().Name + " needs a valid boolean condition field, property or method name to work";
-                Debug.LogWarning(message, property.serializedObject.targetObject);
-
-                return false;
-            }
+            return ConditionalEvaluator.Evaluate(enableIfAttribute, target);
         }
 
         public static bool IsVisible(SerializedProperty property)
@@ -128,40 +95,7 @@ namespace NiceAttributes.Editor.Utility
             }
 
             object target = GetTargetObjectWithProperty(property);
-
-            // deal with enum conditions
-            if (showIfAttribute.EnumValue != null)
-            {
-                Enum value = GetEnumValue(target, showIfAttribute.Conditions[0]);
-                if (value != null)
-                {
-                    bool matched = value.GetType().GetCustomAttribute<FlagsAttribute>() == null
-                        ? showIfAttribute.EnumValue.Equals(value)
-                        : value.HasFlag(showIfAttribute.EnumValue);
-
-                    return matched != showIfAttribute.Inverted;
-                }
-
-                string message = showIfAttribute.GetType().Name + " needs a valid enum field, property or method name to work";
-                Debug.LogWarning(message, property.serializedObject.targetObject);
-
-                return false;
-            }
-
-            // deal with normal conditions
-            List<bool> conditionValues = GetConditionValues(target, showIfAttribute.Conditions);
-            if (conditionValues.Count > 0)
-            {
-                bool enabled = GetConditionsFlag(conditionValues, showIfAttribute.ConditionOperator, showIfAttribute.Inverted);
-                return enabled;
-            }
-            else
-            {
-                string message = showIfAttribute.GetType().Name + " needs a valid boolean condition field, property or method name to work";
-                Debug.LogWarning(message, property.serializedObject.targetObject);
-
-                return false;
-            }
+            return ConditionalEvaluator.Evaluate(showIfAttribute, target);
         }
 
         /// <summary>

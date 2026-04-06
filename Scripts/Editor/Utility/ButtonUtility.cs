@@ -14,18 +14,7 @@ namespace NiceAttributes.Editor.Utility
                 return true;
             }
 
-            List<bool> conditionValues = PropertyUtility.GetConditionValues(target, enableIfAttribute.Conditions);
-            if( conditionValues.Count > 0 )
-            {
-                bool enabled = PropertyUtility.GetConditionsFlag(conditionValues, enableIfAttribute.ConditionOperator, enableIfAttribute.Inverted);
-                return enabled;
-            } else
-            {
-                string message = enableIfAttribute.GetType().Name + $" needs a valid boolean condition field, property or method name to work. [{string.Join(", ", enableIfAttribute.Conditions)}]\n";
-                Debug.LogWarning( message, target as UnityEngine.Object );
-
-                return false;
-            }
+            return ConditionalEvaluator.Evaluate(enableIfAttribute, target);
         }
 
         public static bool IsVisible( object target, MethodInfo method )
@@ -36,19 +25,7 @@ namespace NiceAttributes.Editor.Utility
                 return true;
             }
 
-            List<bool> conditionValues = PropertyUtility.GetConditionValues(target, showIfAttribute.Conditions);
-            if (conditionValues.Count > 0)
-            {
-                bool enabled = PropertyUtility.GetConditionsFlag(conditionValues, showIfAttribute.ConditionOperator, showIfAttribute.Inverted);
-                return enabled;
-            }
-            else
-            {
-                string message = showIfAttribute.GetType().Name + " needs a valid boolean condition field, property or method name to work";
-                Debug.LogWarning( message, target as UnityEngine.Object );
-
-                return false;
-            }
+            return ConditionalEvaluator.Evaluate(showIfAttribute, target);
         }
     }
 }
