@@ -1,0 +1,21 @@
+{
+    "name": "NiceAttributes.Tests",
+    "references": [
+        "NiceAttributes.Core",
+        "NiceAttributes.Editor"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "nunit.framework.dll"
+    ],
+    "autoReferenced": false,
+    "defineConstraints": []
+}
