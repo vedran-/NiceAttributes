@@ -63,7 +63,7 @@ namespace NiceAttributes.Editor
             var displayTree = GroupResolver.BuildDisplayTree(orderedMembers);
             ctx._displayedMembers = displayTree.members;
 
-            InitializeTabGroups(displayTree.groups);
+            TabGroupInitializer.Initialize(displayTree.groups);
 
             return ctx;
         }
@@ -209,37 +209,6 @@ namespace NiceAttributes.Editor
             }
 
             return members;
-        }
-
-        private static void InitializeTabGroups( Dictionary<string, GroupInfo> groups )
-        {
-            //Debug.Log( "Groups:\n" + string.Join( "\n", groups.Select( g => $"{g.Key} - {g.Value.groupAttribute?.GetType().Name}: {string.Join( ", ", g.Value.groups.Select( gg => gg.groupName ) )}" ) ) );
-
-            foreach( var group in groups.Values )
-            {
-                if( group.groupAttribute is not TabGroupAttribute tabAtt ) continue;
-
-                var parentGroup = group.GetParentGroup();
-                if( parentGroup == null ) {
-                    Debug.LogError( $"TabGroup '{group.groupName}' has no parent!" );
-                    //item.errorMessage = $"TabGroup '{group.groupName}' has no parent!";
-                    continue;
-                }
-
-                if( parentGroup.tabParent == null )
-                {
-                    // New Tab Group
-                    parentGroup.tabParent = new TabGroupAttribute.TabParent() {
-                        tabGroups = new List<TabGroupAttribute>() { tabAtt }
-                    };
-                } else {
-                    if( !parentGroup.tabParent.tabGroups.Contains( tabAtt ) ) parentGroup.tabParent.tabGroups.Add( tabAtt );
-                }
-
-                tabAtt.tabParent = parentGroup.tabParent;
-            }
-            // TODO Next: Reorder members, so all with same Tab parent are next to each other
-            //   If not, whole Tab Group can jump from place to place when user switches tabs
         }
 
         
