@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using NiceAttributes.Editor.Discovery;
 using NiceAttributes.Editor.Grouping;
 using NiceAttributes.Editor.Ordering;
 using NiceAttributes.Editor.PropertyDrawers;
@@ -48,8 +49,13 @@ namespace NiceAttributes.Editor
             ctx._indentLevel = indentLevel;
 
             // Get all class members
-            // NOTE: it can call CreateContext() on any field which we want to display expanded (e.g. non-serialized class with [Show] attribute)
-            var members = ctx.GetAllMembers(classType, additionalSkipTypes);
+            var discoverer = new MemberDiscoverer(targetObject, indentLevel, (memberType, obj, childIndent) =>
+            {
+                var childCtx = CreateContext(memberType, obj, childIndent, additionalSkipTypes);
+                if (childCtx.HasNiceAttributes) ctx.HasNiceAttributes = true;
+            });
+            var members = discoverer.GetAllMembers(classType, additionalSkipTypes);
+            if (discoverer.HasNiceAttributes) ctx.HasNiceAttributes = true;
 
             //Debug.Log( $"All members {ctx.hasNiceAttributes} for {classType.Name}:\n - " + string.Join( "\n - ", ctx.members.Select( m => $"{m.memberInfo} - {m.memberInfo.GetInterfaceAttributes<INiceAttribute>().FirstOrDefault()?.LineNumber} >> [{ string.Join( ", ", m.niceAttributes.Select( a => a.GetType() ) )}]" ) ) );
 
@@ -66,149 +72,6 @@ namespace NiceAttributes.Editor
             TabGroupInitializer.Initialize(displayTree.groups);
 
             return ctx;
-        }
-
-
-        private bool IsVisible(MemberInfo mt)
-        {
-            if (Attribute.IsDefined(mt, typeof(HideAttribute)))
-            {
-                HasNiceAttributes = true;
-                return false;
-            }
-
-            if (mt.MemberType == MemberTypes.Property)
-            {
-                return Attribute.IsDefined(mt, typeof(ShowAttribute))
-                       || ReflectionUtility.IsPropertySerialized(mt as PropertyInfo);
-            }
-            if (mt.MemberType == MemberTypes.Method) return Attribute.IsDefined(mt, typeof(ButtonAttribute));
-            if (mt is not FieldInfo fi) return false;
-
-            // Field
-            if (Attribute.IsDefined(fi, typeof(ShowAttribute))) return true;
-            if (fi.IsStatic) return false; // Static fields - not visible
-            if (fi.GetCustomAttribute<CompilerGeneratedAttribute>() != null) return false; // Auto-property backing fields - not visible
-
-            var isVisible = (fi.IsPublic && !Attribute.IsDefined(fi, typeof(NonSerializedAttribute)))
-                            || Attribute.IsDefined(fi, typeof(SerializeField));
-
-            var fieldType = fi.FieldType;
-            if (isVisible)      // Check if basic field type is class or struct
-            {
-                if (fieldType.IsArray) fieldType = fieldType.GetElementType();
-                if (fieldType.IsGenericList()) fieldType = fieldType.GetGenericArguments()[0];
-
-                // Class or struct - only if it has [Serialized] attribute, or if it inherits from ScriptableObject
-                if (fieldType.IsClassOrStruct())
-                {
-                    isVisible = Attribute.IsDefined(fieldType, typeof(SerializableAttribute))
-                                || Attribute.IsDefined(fieldType, typeof(ShowAttribute))
-                                || fieldType.IsSubclassOfRawGeneric(typeof(UnityEngine.Object))
-                                || ReflectionUtility.UnitySpecialTypes.Any(t => t == fieldType);
-                }
-            }
-
-            return isVisible;
-        }
-
-        private List<ClassItem> GetAllMembers( Type classType, Type[] additionalSkipTypes )
-        {
-            var members = new List<ClassItem>();
-            
-            // Add all base types to a list - we need their members too, we inherited them!
-            var types = new List<Type>() { classType };
-            while( types.Last().BaseType != null )
-            {
-                var bt = types.Last().BaseType;
-                if( SkipTypes.Contains( bt ) ) break;
-                if( additionalSkipTypes != null && additionalSkipTypes.Contains( bt ) ) break;
-                types.Add( bt );
-            }
-
-            void AddMember(MemberInfo member, ClassContext memberClassContext)
-            {
-                var n = new ClassItem()
-                {
-                    memberInfo = member,
-                    niceAttributes = member.GetInterfaceAttributes<INiceAttribute>().ToArray(),
-                    classContext = memberClassContext
-                };
-                if (n.niceAttributes.Length > 0)
-                {
-                    HasNiceAttributes = true;
-                }
-
-                // Get line number in source code from INiceAttribute
-                n.lineNumber = n.niceAttributes.Length > 0 ? n.niceAttributes[0].LineNumber : -1f;
-
-                members.Add(n);
-            }
-
-
-            // Get all members of current class + all base classes
-            for( int i = types.Count - 1; i >= 0; i-- )
-            {
-                var typeMembers = types[i]
-                    .GetMembers( AllBindingFields )
-                    .Where( IsVisible );      // Only visible members!
-
-                foreach( var m in typeMembers )
-                {
-                    // Check member type
-                    var fieldInfo = m as FieldInfo;
-                    var propInfo = m as PropertyInfo;
-                    var methodInfo = m as MethodInfo;
-                    var memberType = fieldInfo != null ? fieldInfo.FieldType
-                        : propInfo != null ? propInfo.PropertyType
-                        : methodInfo != null ? methodInfo.ReturnType
-                        : null;
-                    
-                    if( propInfo != null && !propInfo.CanRead ) continue;    // Skip write-only properties
-
-                    ClassContext memberClassContext = null;
-                    if( memberType != null && !memberType.IsArray && !memberType.IsGenericList() )
-                    {
-                        //if( memberType.IsArray ) memberType = memberType.GetElementType();
-                        //if( memberType.IsGenericList() ) memberType = memberType.GetGenericArguments()[0];
-
-                        var treatAsClassOrStruct = memberType.IsClassOrStruct()
-                                                   && memberType != typeof(string);
-                        
-                        if( treatAsClassOrStruct )  // Class or structs - check if we want to show them expanded (with all their members)
-                        {
-                            // Class or Struct has [Hide] attribute - so don't show this whole field at all
-                            if( Attribute.IsDefined( memberType, typeof( HideAttribute ) ) ) {
-                                HasNiceAttributes = true;
-                                continue;
-                            }
-
-                            var useExpandedView = 
-                                (Attribute.IsDefined( memberType, typeof( SerializableAttribute ) ) || Attribute.IsDefined( memberType, typeof( ShowAttribute ) ))
-                                && !memberType.IsSubclassOfRawGeneric( typeof( UnityEngine.Object ) );
-
-                            // Show expanded view of the class/struct - get all its members in a new class context!
-                            if( useExpandedView )
-                            {
-                                var obj = propInfo != null ? propInfo.GetValue( _targetObject, null )
-                                    : fieldInfo != null ? fieldInfo.GetValue( _targetObject )
-                                    : null;
-                                Debug.Assert( obj != null, $"Object for member {m.Name} is null! Parent object was {_targetObject}" );
-
-                                // Create new context for the sub-class
-                                memberClassContext = CreateContext( memberType, obj, _indentLevel + 1 );
-
-                                // If sub-class has any Nice attributes, then mark that we have nice attributes
-                                if( memberClassContext.HasNiceAttributes ) HasNiceAttributes = true;
-                            }
-                        }
-                    }
-
-                    AddMember( m, memberClassContext );
-                }
-            }
-
-            return members;
         }
 
         
