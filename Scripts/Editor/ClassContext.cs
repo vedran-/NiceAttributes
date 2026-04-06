@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using NiceAttributes.Editor.Grouping;
 using NiceAttributes.Editor.Ordering;
 using NiceAttributes.Editor.PropertyDrawers;
 using NiceAttributes.Editor.Utility;
@@ -59,7 +60,7 @@ namespace NiceAttributes.Editor
             // Order class members, as they appear in the source code file
             var orderedMembers = MemberOrderer.Order(members);
 
-            var displayTree = BuildDisplayTree(orderedMembers);
+            var displayTree = GroupResolver.BuildDisplayTree(orderedMembers);
             ctx._displayedMembers = displayTree.members;
 
             InitializeTabGroups(displayTree.groups);
@@ -210,123 +211,6 @@ namespace NiceAttributes.Editor
             return members;
         }
 
-        private static (Dictionary<string, GroupInfo> groups, List<ClassItem> members) BuildDisplayTree( IEnumerable<ClassItem> orderedMembers )
-        {
-            var groups = new Dictionary<string, GroupInfo>();
-
-            // Create root group
-            var rootGroup = new GroupInfo("root");
-            groups["root"] = rootGroup;
-            rootGroup.groups = new GroupInfo[] { rootGroup };
-
-            #region GetGroup()
-            GroupInfo GetGroup( string groupName )
-            {
-                // Check if group already exists
-                if( groups.TryGetValue( groupName, out var groupInfo ) ) return groupInfo;
-
-                // Group does not exist - create new entry - or entries
-                var gs = groupName.Split( '/', StringSplitOptions.None );
-
-                var sb = new System.Text.StringBuilder();
-                var allGroups = new List<GroupInfo>();
-                foreach( var name in gs )
-                {
-                    // Add a subgroup name to end of string
-                    if( sb.Length > 0 ) sb.Append( '/' );
-                    sb.Append( name );
-                    var gname = sb.ToString();
-
-                    if( !groups.TryGetValue( gname, out var gi ) )
-                    {
-                        // This group does not exist yet - so create it!
-                        var n = new GroupInfo(gname);
-                        groups[gname] = n;
-                        allGroups.Add( n );
-                        n.groups = allGroups.ToArray();
-                    } else allGroups.Add( gi );
-                }
-
-                return allGroups.Last();
-            }
-            #endregion GetGroup()
-
-
-            // Create list of all visible members, and order them by groups they belong to
-            var items = new List<ClassItem>();
-            foreach( var member in orderedMembers )
-            {
-                #region Check all groups it belongs to
-                var errors = new List<string>();
-                int deepestLevel = -1;
-                GroupInfo mainGroupInfo = null;
-                var groupAttributes = member.memberInfo.GetCustomAttributes<BaseGroupAttribute>();
-                foreach( var groupAttribute in groupAttributes )
-                {
-                    var groupName = groupAttribute != null ? $"root/{groupAttribute.GroupName}" : "root";
-                    var groupInfo = GetGroup( groupName );
-                    
-                    // First direct assignment of this group type
-                    // That way, we can use groups with subgroups, even before we define them!
-                    //
-                    // Special case: generic group attribute - will always be overwritten by any other group type
-                    if( groupInfo.groupAttribute == null || groupInfo.groupAttribute is GroupAttribute ) groupInfo.groupAttribute = groupAttribute;
-
-                    if( groupInfo.groups != null && groupInfo.groups.Length > deepestLevel )
-                    {
-                        deepestLevel = groupInfo.groups.Length;
-                        mainGroupInfo = groupInfo;
-                    }
-
-                    // TODO: Check if mainGroupInfo and groupInfo are on the same branch of the tree!
-                    // TODO2: If not, perhaps display the item on 2 (or more) positions?
-
-                    // Make sure that group type hasn't changed!
-                    if( groupAttribute != null && groupAttribute is not GroupAttribute
-                        && groupInfo.groupAttribute.GetType() != groupAttribute.GetType() )
-                    {
-                        errors.Add( $"Group type {groupAttribute.GetType().Name} is different from original {groupInfo.groupAttribute.GetType().Name} for group '{groupInfo.groupName}'!" );
-                    }
-                }
-                if( mainGroupInfo == null ) {   // If item doesn't belong to any groups
-                    mainGroupInfo = rootGroup;
-                }
-                #endregion Check all groups it belongs to
-
-                // Create item for it!
-                member.group = mainGroupInfo;
-                member.errorMessage = errors.Count > 0 ? string.Join( "\n", errors ) : null;
-
-
-                // Here is where the magic happens:
-                // - it sorts all the items by the groups, but it tries to keep the original order of all the members
-
-                // Find last item, which has the most same groups as we
-                // - this will be our insertion point!
-                int mostGroupsIdx = -1, mostGroupsCount = -1;
-                for( int idx = 0; idx < items.Count; idx++ )
-                {
-                    int len = Mathf.Min( items[idx].group.groups.Length, mainGroupInfo.groups.Length );
-                    for( int j = 0; j < len; j++ )
-                    {
-                        if( items[idx].group.groups[j] != mainGroupInfo.groups[j] ) break;
-
-                        if( j >= mostGroupsCount )
-                        {
-                            mostGroupsIdx = idx;
-                            mostGroupsCount = j;
-                        }
-                    }
-                }
-
-                if( mostGroupsIdx < 0 ) items.Add( member );     // Insert on last position in the list
-                else items.Insert( mostGroupsIdx + 1, member );  // Insert after last item from this group
-                //Debug.Log( $"Item order: " + string.Join( ", ", items.Select( i => $"{i.memberInfo.Name} [{i.group.groupName}]" ) ) );
-            }
-
-            return (groups, items);
-        }
-    
         private static void InitializeTabGroups( Dictionary<string, GroupInfo> groups )
         {
             //Debug.Log( "Groups:\n" + string.Join( "\n", groups.Select( g => $"{g.Key} - {g.Value.groupAttribute?.GetType().Name}: {string.Join( ", ", g.Value.groups.Select( gg => gg.groupName ) )}" ) ) );
