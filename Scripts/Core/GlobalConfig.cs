@@ -5,7 +5,23 @@ namespace NiceAttributes
 {
     public static class GlobalConfig
     {
-        public static bool EnableNiceAttributes = true;
+        private const string PREFS_KEY = "NiceAttributes.Enabled";
+        private static bool? _enableNiceAttributes;
+
+        public static bool EnableNiceAttributes
+        {
+            get
+            {
+                if (!_enableNiceAttributes.HasValue)
+                    _enableNiceAttributes = EditorPrefs.GetBool(PREFS_KEY, true);
+                return _enableNiceAttributes.Value;
+            }
+            set
+            {
+                _enableNiceAttributes = value;
+                EditorPrefs.SetBool(PREFS_KEY, value);
+            }
+        }
 
         [MenuItem("Tools/Nice Attributes/Enable Nice Attributes", priority = 1)]
         private static void SetEnableNiceAttributes()
