@@ -1,9 +1,9 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using NiceAttributes.Editor.PropertyDrawers_SpecialCase;
-using NiceAttributes.Editor.PropertyValidators;
 using NiceAttributes.Model;
 using UnityEditor;
 using UnityEditor.SceneManagement;
@@ -57,32 +57,10 @@ namespace NiceAttributes.Editor.Utility
                 specialCaseAttribute.GetDrawer().OnGUI( rect, property );
             } else
             {
-                // Check if visible
-                bool visible = PropertyUtility.IsVisible(property);
-                if( !visible ) {
-                    return;
-                }
-
-                // Validate
-                ValidatorAttribute[] validatorAttributes = PropertyUtility.GetAttributes<ValidatorAttribute>(property);
-                foreach( var validatorAttribute in validatorAttributes )
-                {
-                    validatorAttribute.GetValidator().ValidateProperty( property );
-                }
-
-                // Check if enabled and draw
-                EditorGUI.BeginChangeCheck();
-                bool enabled = PropertyUtility.IsEnabled(property);
-                using( new EditorGUI.DisabledScope( disabled: !enabled ) )
-                {
-                    propertyFieldFunction.Invoke( rect, property, PropertyUtility.GetLabel( property ), includeChildren );
-                }
-
-                // Call OnValueChanged callbacks
-                if( EditorGUI.EndChangeCheck() )
-                {
-                    PropertyUtility.CallOnValueChangedCallbacks( property );
-                }
+                PropertyDrawPipeline.Execute(
+                    rect,
+                    property,
+                    (drawRect, drawProperty, label) => propertyFieldFunction.Invoke(drawRect, drawProperty, label, includeChildren));
             }
         }
         #endregion PropertyField_Implementation()
@@ -434,7 +412,7 @@ namespace NiceAttributes.Editor.Utility
         }
         #endregion Field_Layout()
 
-        private static bool foldedOut = true;
+        private static Dictionary<string, bool> _collectionFoldouts = new Dictionary<string, bool>();
         private static (bool isDrawn, object outValue) HandleCollection( object value, GUIContent label )
         {
             var valueType = value.GetType();
@@ -452,12 +430,18 @@ namespace NiceAttributes.Editor.Utility
                 return (false, value);
             }
 
-            var folded = EditorGUILayout.Foldout( foldedOut, label, true );
-            if( folded != foldedOut ) { // Value changed
-                foldedOut = folded;
-                //EditorPrefs.SetBool( id, folded );
+            var foldoutKey = valueType.FullName + "_" + label.text;
+            if( !_collectionFoldouts.TryGetValue( foldoutKey, out var foldedOut ) )
+            {
+                foldedOut = true;
             }
-            if( !foldedOut ) return (true, value);
+
+            var folded = EditorGUILayout.Foldout( foldedOut, label, true );
+            if( folded != foldedOut )
+            {
+                _collectionFoldouts[foldoutKey] = folded;
+            }
+            if( !folded ) return (true, value);
             
             for( int i = 0; i < length; i++ )
             {
