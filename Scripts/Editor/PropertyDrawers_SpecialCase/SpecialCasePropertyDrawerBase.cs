@@ -1,6 +1,4 @@
-﻿using NiceAttributes.Editor.PropertyValidators;
 using NiceAttributes.Editor.Utility;
-using NiceAttributes.Model;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,34 +8,7 @@ namespace NiceAttributes.Editor.PropertyDrawers_SpecialCase
     {
         public void OnGUI(Rect rect, SerializedProperty property)
         {
-            // Check if visible
-            bool visible = PropertyUtility.IsVisible(property);
-            if (!visible)
-            {
-                return;
-            }
-
-            // Validate
-            ValidatorAttribute[] validatorAttributes = PropertyUtility.GetAttributes<ValidatorAttribute>(property);
-            foreach (var validatorAttribute in validatorAttributes)
-            {
-                validatorAttribute.GetValidator().ValidateProperty(property);
-            }
-
-            // Check if enabled and draw
-            EditorGUI.BeginChangeCheck();
-            bool enabled = PropertyUtility.IsEnabled(property);
-
-            using (new EditorGUI.DisabledScope(disabled: !enabled))
-            {
-                OnGUI_Internal(rect, property, PropertyUtility.GetLabel(property));
-            }
-
-            // Call OnValueChanged callbacks
-            if (EditorGUI.EndChangeCheck())
-            {
-                PropertyUtility.CallOnValueChangedCallbacks(property);
-            }
+            PropertyDrawPipeline.Execute(rect, property, OnGUI_Internal);
         }
 
         public float GetPropertyHeight(SerializedProperty property)
