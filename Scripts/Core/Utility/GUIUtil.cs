@@ -38,9 +38,6 @@ namespace NiceAttributes
 
         public static bool InstantClickButton(Rect rect, string text, GUIStyle style = null)
         {
-#if false
-            return GUI.Button(rect, text, style ?? GUI.skin.button);
-#elif true
             GUI.Box(rect, text, style ?? GUI.skin.button);
             var e = Event.current;
             if (e.type == EventType.MouseDown && e.button == 0 && rect.Contains(e.mousePosition))
@@ -49,18 +46,6 @@ namespace NiceAttributes
                 return true;
             }
             return false;
-#else
-            GUI.Box(rect, text, style ?? GUI.skin.button);
-            int id = GUIUtility.GetControlID(FocusType.Passive);
-            if (Event.current.GetTypeForControl(id) == EventType.MouseDown
-                && Event.current.button == 0
-                && rect.Contains(Event.current.mousePosition))
-            {
-                e.Use();
-                return true;
-            }
-            return false;
-#endif
         }
 
 

@@ -14,14 +14,6 @@ namespace NiceAttributes
             Inverted = false;
         }
 
-#if false
-        public ShowIfAttribute(EConditionOperator conditionOperator, params string[] conditions)
-            : base(conditionOperator, conditions)
-        {
-            Inverted = false;
-        }
-#endif
-
         public ShowIfAttribute( string enumName, object enumValue, [CallerLineNumber] int lineNumber = 0 )
             : base( enumName, enumValue as Enum, lineNumber )
         {

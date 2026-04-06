@@ -14,14 +14,6 @@ namespace NiceAttributes
             Inverted = true;
         }
 
-#if false
-        public HideIfAttribute(EConditionOperator conditionOperator, params string[] conditions)
-            : base(conditionOperator, conditions)
-        {
-            Inverted = true;
-        }
-#endif
-
         public HideIfAttribute( string enumName, object enumValue, [CallerLineNumber] int lineNumber = 0 )
             : base( enumName, enumValue as Enum, lineNumber )
         {

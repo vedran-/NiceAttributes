@@ -3,7 +3,7 @@ using NiceAttributes.Model;
 
 namespace NiceAttributes
 {
-    public class ShowIfAttributeBase : MetaAttribute
+    public class ShowIfAttributeBase : MetaAttribute, IConditionalAttribute
     {
         public string[] Conditions { get; private set; }
         public EConditionOperator ConditionOperator { get; private set; }
@@ -20,14 +20,6 @@ namespace NiceAttributes
             ConditionOperator = EConditionOperator.And;
             Conditions = new string[1] { condition };
         }
-
-#if false
-        public ShowIfAttributeBase( EConditionOperator conditionOperator, params string[] conditions )
-        {
-            ConditionOperator = conditionOperator;
-            Conditions = conditions;
-        }
-#endif
 
         public ShowIfAttributeBase( string enumName, Enum enumValue, int lineNumber )
             : this( enumName, lineNumber )

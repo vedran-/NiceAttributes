@@ -3,7 +3,7 @@ using NiceAttributes.Model;
 
 namespace NiceAttributes
 {
-    public abstract class EnableIfAttributeBase : MetaAttribute
+    public abstract class EnableIfAttributeBase : MetaAttribute, IConditionalAttribute
     {
         public string[] Conditions { get; private set; }
         public EConditionOperator ConditionOperator { get; private set; }
@@ -20,14 +20,6 @@ namespace NiceAttributes
             ConditionOperator = EConditionOperator.And;
             Conditions = new string[1] { condition };
         }
-
-#if false
-        public EnableIfAttributeBase( EConditionOperator conditionOperator, params string[] conditions = null, [CallerLineNumber] int lineNumber = 0 )
-        {
-            ConditionOperator = conditionOperator;
-            Conditions = conditions;
-        }
-#endif
 
         public EnableIfAttributeBase( string enumName, Enum enumValue, int lineNumber )
             : this( enumName, lineNumber )

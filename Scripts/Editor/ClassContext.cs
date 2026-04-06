@@ -397,31 +397,6 @@ namespace NiceAttributes.Editor
 
                 tabAtt.tabParent = parentGroup.tabParent;
             }
-/*/
-            foreach( var item in members )
-            {
-                if( item.memberInfo == null ) continue;
-                if( item.group.groupAttribute is not TabGroupAttribute tabAtt ) continue;
-            
-                var parentGroup = item.group.GetParentGroup();
-                if( parentGroup == null ) {
-                    item.errorMessage = $"TabGroup '{item.group.groupName}' on member '{item.memberInfo.Name}' has no parent!";
-                    continue;
-                }
-            
-                if( parentGroup.tabParent == null )
-                {
-                    // New Tab Group
-                    parentGroup.tabParent = new TabGroupAttribute.TabParent() {
-                        tabGroups = new List<TabGroupAttribute>() { tabAtt }
-                    };
-                } else {
-                    if( !parentGroup.tabParent.tabGroups.Contains( tabAtt ) ) parentGroup.tabParent.tabGroups.Add( tabAtt );
-                }
-            
-                tabAtt.tabParent = parentGroup.tabParent;
-            }
-/**/
             // TODO Next: Reorder members, so all with same Tab parent are next to each other
             //   If not, whole Tab Group can jump from place to place when user switches tabs
         }
