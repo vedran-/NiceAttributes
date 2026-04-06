@@ -25,7 +25,7 @@ namespace NiceAttributes.Editor
                 _rootClass = ClassContext.CreateContext(target.GetType(), serializedObject.targetObject, 0);
                 if (_rootClass.HasNiceAttributes)
                 {
-                    ClassContext.ConnectWithSerializedProperties(_rootClass, serializedObject.GetIterator());
+                    SerializedPropertyConnector.Connect(_rootClass, serializedObject.GetIterator());
                 }
             }
             catch (Exception ex)
