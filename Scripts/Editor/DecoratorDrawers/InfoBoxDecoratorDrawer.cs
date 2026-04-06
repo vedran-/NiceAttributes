@@ -1,4 +1,8 @@
-﻿using NiceAttributes.Editor.Utility;
+﻿using System;
+using System.Collections.Generic;
+using System.Globalization;
+using System.Reflection;
+using NiceAttributes.Editor.Utility;
 using UnityEditor;
 using UnityEngine;
 
@@ -44,50 +48,177 @@ namespace NiceAttributes.Editor.DecoratorDrawers
 
 
         #region [Util] GetTextContent()
-        GUIContent textContent = null;
         bool hasError = false;
+        bool hasLookupError = false;
         GUIContent GetTextContent()
         {
-            // TODO: If some variable changed, we should re-evaluate the expression again.
+            var infoBoxAttribute = attribute as InfoBoxAttribute;
+            if( infoBoxAttribute == null ) return GUIContent.none;
 
-            if( textContent == null )
-            {
-                var infoBoxAttribute = attribute as InfoBoxAttribute;
-                //if( infoBoxAttribute.ClassItem == null ) return GUIContent.none;
-                //var classItem = infoBoxAttribute.ClassItem as ClassContext.ClassItem;
+            hasLookupError = false;
+            var parseResult = MathematicalParser.Evaluate( infoBoxAttribute.Text, GetVariableValue, GetFunctionValue );
+            var text = parseResult.result?.ToString() ?? string.Empty;
+            hasError = hasLookupError || !parseResult.successful;
 
-                var parseResult = MathematicalParser.Evaluate( infoBoxAttribute.Text, GetVariableValue, GetFunctionValue );
-                var text = parseResult.result?.ToString();
-                hasError = !parseResult.successful;
-
-                //var text = parseResult.successful ? parseResult.result?.ToString() : infoBoxAttribute.Text;
-                //if( !parseResult.successful && classItem != null ) classItem.errorMessage = parseResult.result.ToString();
-
-                textContent = new GUIContent( text );
-            }
-
-            return textContent;
+            return new GUIContent( text );
         }
         #endregion GetTextContent()
 
 
         private object GetVariableValue( string variableName )
         {
-            if( variableName == "a" ) return 3;
-            if( variableName == "b" ) return 10;
+            try
+            {
+                object target = GetTargetObject();
+                if( target == null ) return CreateErrorResult( "Could not resolve target object." );
 
-            throw new System.Exception( $"INVALID VAR with name {variableName}!" );
+                FieldInfo fieldInfo = ReflectionUtility.GetField( target, variableName );
+                if( fieldInfo != null ) return fieldInfo.GetValue( target );
+
+                PropertyInfo propertyInfo = ReflectionUtility.GetProperty( target, variableName );
+                if( propertyInfo != null ) return propertyInfo.GetValue( target );
+
+                MethodInfo methodInfo = ReflectionUtility.GetMethod( target, variableName );
+                if( methodInfo != null )
+                {
+                    if( methodInfo.ReturnType == typeof( void ) || methodInfo.GetParameters().Length != 0 )
+                    {
+                        return CreateErrorResult( $"Member '{variableName}' must be a field, property, or parameterless method." );
+                    }
+
+                    return methodInfo.Invoke( target, null );
+                }
+
+                return CreateErrorResult( $"Member '{variableName}' was not found." );
+            }
+            catch( Exception ex )
+            {
+                return CreateErrorResult( GetExceptionMessage( ex ) );
+            }
         }
 
         private object GetFunctionValue( string functionName, object parameters )
         {
-            var infoBoxAttribute = (InfoBoxAttribute)attribute;
-            //if( infoBoxAttribute.ClassItem == null ) return null;
+            try
+            {
+                object target = GetTargetObject();
+                if( target == null ) return CreateErrorResult( "Could not resolve target object." );
 
-            if( functionName == "f1" ) return 30;
-            if( functionName == "f2" ) return 5;
+                object[] parameterValues = GetParameterValues( parameters );
+                MethodInfo methodInfo = GetMethod( target, functionName, parameterValues, out object[] convertedParameters );
+                if( methodInfo == null )
+                {
+                    return CreateErrorResult( $"Function '{functionName}' was not found or parameters are invalid." );
+                }
 
-            throw new System.Exception( $"INVALID FUNC with name {functionName}!" );
+                return methodInfo.Invoke( target, convertedParameters );
+            }
+            catch( Exception ex )
+            {
+                return CreateErrorResult( GetExceptionMessage( ex ) );
+            }
+        }
+
+        private object GetTargetObject()
+        {
+            return PropertyUtility.GetTargetObjectOfProperty( this.property );
+        }
+
+        private MethodInfo GetMethod( object target, string functionName, object[] parameterValues, out object[] convertedParameters )
+        {
+            convertedParameters = null;
+
+            MethodInfo methodInfo = ReflectionUtility.GetMethod( target, functionName );
+            if( TryPrepareMethodParameters( methodInfo, parameterValues, out convertedParameters ) ) return methodInfo;
+
+            foreach( MethodInfo candidate in ReflectionUtility.GetAllMethods( target, m => m.Name.Equals( functionName, StringComparison.Ordinal ) ) )
+            {
+                if( TryPrepareMethodParameters( candidate, parameterValues, out convertedParameters ) ) return candidate;
+            }
+
+            return null;
+        }
+
+        private object[] GetParameterValues( object parameters )
+        {
+            if( parameters is List<object> parameterList ) return parameterList.ToArray();
+            if( parameters == null ) return new object[0];
+            return new[] { parameters };
+        }
+
+        private bool TryPrepareMethodParameters( MethodInfo methodInfo, object[] parameterValues, out object[] convertedParameters )
+        {
+            convertedParameters = null;
+            if( methodInfo == null ) return false;
+
+            ParameterInfo[] parameterInfos = methodInfo.GetParameters();
+            if( parameterInfos.Length != parameterValues.Length ) return false;
+
+            convertedParameters = new object[parameterInfos.Length];
+            for( int i = 0; i < parameterInfos.Length; i++ )
+            {
+                if( !TryConvertValue( parameterValues[i], parameterInfos[i].ParameterType, out convertedParameters[i] ) ) return false;
+            }
+
+            return true;
+        }
+
+        private bool TryConvertValue( object value, Type targetType, out object convertedValue )
+        {
+            convertedValue = null;
+
+            Type underlyingType = Nullable.GetUnderlyingType( targetType ) ?? targetType;
+            if( value == null )
+            {
+                if( underlyingType.IsValueType && Nullable.GetUnderlyingType( targetType ) == null ) return false;
+                return true;
+            }
+
+            if( underlyingType.IsInstanceOfType( value ) )
+            {
+                convertedValue = value;
+                return true;
+            }
+
+            try
+            {
+                if( underlyingType.IsEnum )
+                {
+                    if( value is string enumString )
+                    {
+                        convertedValue = Enum.Parse( underlyingType, enumString, true );
+                        return true;
+                    }
+
+                    object enumValue = Convert.ChangeType( value, Enum.GetUnderlyingType( underlyingType ), CultureInfo.InvariantCulture );
+                    convertedValue = Enum.ToObject( underlyingType, enumValue );
+                    return true;
+                }
+
+                convertedValue = Convert.ChangeType( value, underlyingType, CultureInfo.InvariantCulture );
+                return true;
+            }
+            catch
+            {
+                convertedValue = null;
+                return false;
+            }
+        }
+
+        private object CreateErrorResult( string message )
+        {
+            hasLookupError = true;
+            return $"ERROR: {message}";
+        }
+
+        private string GetExceptionMessage( Exception exception )
+        {
+            while( exception is TargetInvocationException && exception.InnerException != null )
+            {
+                exception = exception.InnerException;
+            }
+
+            return exception.Message;
         }
     }
 }
