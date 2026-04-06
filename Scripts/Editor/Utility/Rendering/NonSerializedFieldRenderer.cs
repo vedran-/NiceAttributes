@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
+using NiceAttributes;
 using UnityEditor;
 using UnityEngine;
 
@@ -17,7 +19,7 @@ namespace NiceAttributes.Editor.Utility
             var label = new GUIContent(ObjectNames.NicifyVariableName(property.Name));
             if (!Field_Layout(value, property.PropertyType, label, !property.CanWrite, out var outValue))
             {
-                var warning = $"{nameof(NiceAttributes.Model.ShowAttribute)} doesn't support {property.PropertyType.Name} types";
+                var warning = $"{nameof(ShowAttribute)} doesn't support {property.PropertyType.Name} types";
                 HelpBoxRenderer.HelpBox_Layout(warning, MessageType.Warning, context: target as UnityEngine.Object);
                 return;
             }
@@ -34,7 +36,7 @@ namespace NiceAttributes.Editor.Utility
             var label = new GUIContent(ObjectNames.NicifyVariableName(field.Name));
             if (!Field_Layout(value, field.FieldType, label, false, out var outValue))
             {
-                var warning = $"{nameof(NiceAttributes.Model.ShowAttribute)} doesn't support {field.FieldType.Name} types";
+                var warning = $"{nameof(ShowAttribute)} doesn't support {field.FieldType.Name} types";
                 HelpBoxRenderer.HelpBox_Layout(warning, MessageType.Warning, context: target as UnityEngine.Object);
                 return;
             }

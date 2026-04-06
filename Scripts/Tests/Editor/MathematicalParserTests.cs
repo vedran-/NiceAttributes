@@ -119,7 +119,7 @@ namespace NiceAttributes.Tests.Editor
         {
             var (result, success) = Eval( "(3.5 + -4.5) / 3" );
             Assert.IsTrue( success );
-            Assert.AreEqual( -1.0 / 3.0, result, 0.0001 );
+            Assert.AreEqual( -1.0 / 3.0, (double)result, 0.0001 );
         }
         #endregion
 
@@ -233,7 +233,7 @@ namespace NiceAttributes.Tests.Editor
         }
 
         [Test]
-        public StringTest()
+        public void StringTest()
         {
             var (result, success) = Eval( "'Hello ' + 'World'" );
             Assert.IsTrue( success );
@@ -404,7 +404,7 @@ namespace NiceAttributes.Tests.Editor
         {
             var (result, success) = Eval( "3.14" );
             Assert.IsTrue( success );
-            Assert.AreEqual( 3.14, result, 0.0001 );
+            Assert.AreEqual( 3.14, (double)result, 0.0001 );
         }
 
         [Test]

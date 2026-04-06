@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 using System.Linq;
-using NiceAttributes.GroupAttributes;
+using NiceAttributes.Editor;
 
 namespace NiceAttributes.Editor.Grouping
 {

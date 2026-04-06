@@ -2,7 +2,7 @@ namespace NiceAttributes.Editor
 {
     public partial class ClassContext
     {
-        private class GroupInfo
+        public class GroupInfo
         {
             public readonly string      groupName;
             public BaseGroupAttribute   groupAttribute = null;

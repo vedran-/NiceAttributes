@@ -6,7 +6,7 @@ namespace NiceAttributes.Editor
 {
     public partial class ClassContext
     {
-        private class ClassItem
+        public class ClassItem
         {
             public MemberInfo           memberInfo;
             public INiceAttribute[]     niceAttributes;

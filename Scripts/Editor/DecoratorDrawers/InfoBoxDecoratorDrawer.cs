@@ -11,6 +11,8 @@ namespace NiceAttributes.Editor.DecoratorDrawers
     [CustomPropertyDrawer( typeof( InfoBoxAttribute ) )]
     public class InfoBoxDecoratorDrawer : DecoratorDrawer
     {
+        private static object _currentTarget;
+        private static SerializedProperty _currentProperty;
         #region GetHeight()
         public override float GetHeight()
         {
@@ -121,7 +123,7 @@ namespace NiceAttributes.Editor.DecoratorDrawers
 
         private object GetTargetObject()
         {
-            return PropertyUtility.GetTargetObjectOfProperty( this.property );
+            return PropertyDrawPipeline.CurrentTarget;
         }
 
         private MethodInfo GetMethod( object target, string functionName, object[] parameterValues, out object[] convertedParameters )

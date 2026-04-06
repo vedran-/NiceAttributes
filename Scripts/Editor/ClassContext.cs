@@ -23,9 +23,9 @@ namespace NiceAttributes.Editor
         
         public bool             HasNiceAttributes { get; private set; } = false;
 
-        private List<ClassItem> _displayedMembers = null;
-        private object          _targetObject;
-        private int             _indentLevel;
+        internal List<ClassItem> _displayedMembers = null;
+        internal object          _targetObject;
+        internal int             _indentLevel;
 
 
         // Private constructor - call CreateContext() to create a new instance

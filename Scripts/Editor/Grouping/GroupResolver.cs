@@ -1,6 +1,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using NiceAttributes.Editor;
+using UnityEngine;
+using BaseGroupAttribute = NiceAttributes.BaseGroupAttribute;
+using GroupAttribute = NiceAttributes.GroupAttribute;
 
 namespace NiceAttributes.Editor.Grouping
 {
@@ -46,13 +50,13 @@ namespace NiceAttributes.Editor.Grouping
                 var errors = new List<string>();
                 int deepestLevel = -1;
                 ClassContext.GroupInfo mainGroupInfo = null;
-                var groupAttributes = member.memberInfo.GetCustomAttributes<NiceAttributes.Model.BaseGroupAttribute>();
+                var groupAttributes = member.memberInfo.GetCustomAttributes(typeof(BaseGroupAttribute), inherit: false).Cast<BaseGroupAttribute>();
                 foreach (var groupAttribute in groupAttributes)
                 {
                     var groupName = groupAttribute != null ? $"root/{groupAttribute.GroupName}" : "root";
                     var groupInfo = GetGroup(groupName);
 
-                    if (groupInfo.groupAttribute == null || groupInfo.groupAttribute is NiceAttributes.Model.GroupAttribute) groupInfo.groupAttribute = groupAttribute;
+                    if (groupInfo.groupAttribute == null || groupInfo.groupAttribute is GroupAttribute) groupInfo.groupAttribute = groupAttribute;
 
                     if (groupInfo.groups != null && groupInfo.groups.Length > deepestLevel)
                     {
@@ -60,7 +64,7 @@ namespace NiceAttributes.Editor.Grouping
                         mainGroupInfo = groupInfo;
                     }
 
-                    if (groupAttribute != null && groupAttribute is not NiceAttributes.Model.GroupAttribute
+                    if (groupAttribute != null && groupAttribute is not GroupAttribute
                         && groupInfo.groupAttribute.GetType() != groupAttribute.GetType())
                     {
                         errors.Add($"Group type {groupAttribute.GetType().Name} is different from original {groupInfo.groupAttribute.GetType().Name} for group '{groupInfo.groupName}'!");

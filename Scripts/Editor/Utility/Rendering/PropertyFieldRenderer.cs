@@ -3,7 +3,9 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using NiceAttributes;
 using NiceAttributes.Editor.PropertyDrawers_SpecialCase;
+using NiceAttributes.Model;
 using UnityEditor;
 using UnityEngine;
 

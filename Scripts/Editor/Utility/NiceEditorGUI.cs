@@ -6,6 +6,9 @@ namespace NiceAttributes.Editor.Utility
 {
     public static class NiceEditorGUI
     {
+        public const float IndentLength = PropertyFieldRenderer.IndentLength;
+        public const float HorizontalSpacing = PropertyFieldRenderer.HorizontalSpacing;
+
         #region PropertyField delegation
         public static void PropertyField(Rect rect, SerializedProperty property, bool includeChildren)
             => PropertyFieldRenderer.PropertyField(rect, property, includeChildren);
