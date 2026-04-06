@@ -22,8 +22,6 @@ namespace NiceAttributes.Editor.PropertyDrawers_SpecialCase
         {
             EditorGUI.BeginProperty(position, label, property);
             
-            EditorGUILayout.LabelField("HELLOOO");
-
             if (property.isArray)
             {
                 EditorGUI.PropertyField(position, property, label, true);

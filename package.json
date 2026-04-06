@@ -4,7 +4,7 @@
   "description": "NiceAttributes, a Unity plugin which extends Inspector with simple attributes. Based on NaughtyAttributes, but with complete rewrite of the core functionality.",
   "version": "0.9.1",
   "unity": "2018.4",
-  "licence": "MIT",
+  "license": "MIT",
   "licensesUrl": "https://github.com/vedran-/NiceAttributes/blob/main/LICENSE",
   "keywords": [ "attribute", "inspector", "editor", "group", "Unity" ],
   "category": "editor extensions",
