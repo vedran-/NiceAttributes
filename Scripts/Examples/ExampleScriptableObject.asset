@@ -9,9 +9,25 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ca2fc882e34141bd9c82af450ae2aaba, type: 3}
+  m_Script: {fileID: 11500000, guid: 7bb2603714c82de4ab5196efbb7fea1e, type: 3}
   m_Name: ExampleScriptableObject
   m_EditorClassIdentifier: Assembly-CSharp-firstpass::NiceAttributes.Examples.ExampleScriptableObject
+  <u01>k__BackingField: 7
+  <u02>k__BackingField: 1
+  animalsCount: 0
+  animalNames:
+  - Lassie
+  - Laika
+  - Max
+  dogsCount: 3
+  isDogHappy: 0
+  catsCount: 0
+  objectsCount: 0
+  chairsCount: 0
+  tablesCount: 0
+  electronicsCount: 0
+  CustomGUIFunctionExample: Look at OnPreGUI() and OnPostGUI() methods in the script
+    to see how to use custom GUI functions.
   a01: 0
   a02: 0
   a03: 0
