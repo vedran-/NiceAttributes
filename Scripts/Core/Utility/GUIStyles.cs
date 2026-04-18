@@ -28,95 +28,45 @@ namespace NiceAttributes
 
         public static GUIStyle RoundedRect
         {
-            get
-            {
-                if (_roundedRectStyle == null)
-                {
-                    if (string.IsNullOrEmpty(_roundedRectGuid))
-                    {
-                        var guids = AssetDatabase.FindAssets("RoundRect t:Sprite");
-                        if (guids.Length > 0)
-                        {
-                            _roundedRectGuid = guids[0];
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(_roundedRectGuid) && _roundedRectSprite == null)
-                    {
-                        var path = AssetDatabase.GUIDToAssetPath(_roundedRectGuid);
-                        _roundedRectSprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                    }
-
-                    if (_roundedRectSprite != null)
-                    {
-                        _roundedRectStyle = GUIUtil.GUIStyleFromSplicedSprite(_roundedRectSprite);
-                    }
-                }
-
-                return _roundedRectStyle;
-            }
+            get => LoadStyleFromSprite(ref _roundedRectGuid, ref _roundedRectSprite, ref _roundedRectStyle, "RoundRect t:Sprite");
         }
 
         public static GUIStyle RoundedTopRect
         {
-            get
-            {
-                if (_roundedTopRectStyle == null)
-                {
-                    if (string.IsNullOrEmpty(_roundedTopRectGuid))
-                    {
-                        var guids = AssetDatabase.FindAssets("RoundTopRect t:Sprite");
-                        if (guids.Length > 0)
-                        {
-                            _roundedTopRectGuid = guids[0];
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(_roundedTopRectGuid) && _roundedTopRectSprite == null)
-                    {
-                        var path = AssetDatabase.GUIDToAssetPath(_roundedTopRectGuid);
-                        _roundedTopRectSprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                    }
-
-                    if (_roundedTopRectSprite != null)
-                    {
-                        _roundedTopRectStyle = GUIUtil.GUIStyleFromSplicedSprite(_roundedTopRectSprite);
-                    }
-                }
-
-                return _roundedTopRectStyle;
-            }
+            get => LoadStyleFromSprite(ref _roundedTopRectGuid, ref _roundedTopRectSprite, ref _roundedTopRectStyle, "RoundTopRect t:Sprite");
         }
 
         public static GUIStyle RoundedBottomRect
         {
-            get
+            get => LoadStyleFromSprite(ref _roundedBottomRectGuid, ref _roundedBottomRectSprite, ref _roundedBottomRectStyle, "RoundBottomRect t:Sprite");
+        }
+
+        private static GUIStyle LoadStyleFromSprite(ref string guidCache, ref Sprite spriteCache, ref GUIStyle styleCache, string searchPattern)
+        {
+            if (styleCache == null)
             {
-                if (_roundedBottomRectStyle == null)
+                if (string.IsNullOrEmpty(guidCache))
                 {
-                    if (string.IsNullOrEmpty(_roundedBottomRectGuid))
+                    var guids = AssetDatabase.FindAssets(searchPattern);
+                    if (guids.Length > 0)
                     {
-                        var guids = AssetDatabase.FindAssets("RoundBottomRect t:Sprite");
-                        if (guids.Length > 0)
-                        {
-                            _roundedBottomRectGuid = guids[0];
-                        }
-                    }
-
-                    if (!string.IsNullOrEmpty(_roundedBottomRectGuid) && _roundedBottomRectSprite == null)
-                    {
-                        var path = AssetDatabase.GUIDToAssetPath(_roundedBottomRectGuid);
-                        _roundedBottomRectSprite = AssetDatabase.LoadAssetAtPath<Sprite>(path);
-                    }
-
-                    if (_roundedBottomRectSprite != null)
-                    {
-                        _roundedBottomRectStyle = GUIUtil.GUIStyleFromSplicedSprite(_roundedBottomRectSprite);
+                        guidCache = guids[0];
                     }
                 }
 
-                return _roundedBottomRectStyle;
+                if (!string.IsNullOrEmpty(guidCache) && spriteCache == null)
+                {
+                    var path = AssetDatabase.GUIDToAssetPath(guidCache);
+                    spriteCache = AssetDatabase.LoadAssetAtPath<Sprite>(path);
+                }
+
+                if (spriteCache != null)
+                {
+                    styleCache = GUIUtil.GUIStyleFromSplicedSprite(spriteCache);
+                }
             }
+
+            return styleCache;
         }
     }
 }
