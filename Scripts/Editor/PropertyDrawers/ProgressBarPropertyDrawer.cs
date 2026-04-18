@@ -1,4 +1,4 @@
-﻿using System.Reflection;
+using System.Reflection;
 using NiceAttributes.Editor.Utility;
 using UnityEditor;
 using UnityEngine;
@@ -110,23 +110,22 @@ namespace NiceAttributes.Editor.PropertyDrawers
             EditorGUI.DrawRect(rect, new Color(0.13f, 0.13f, 0.13f));
             EditorGUI.DrawRect(fillRect, barColor);
 
-            // set alignment and cache the default
             var align = GUI.skin.label.alignment;
-            GUI.skin.label.alignment = TextAnchor.UpperCenter;
-
-            // set the color and cache the default
             var c = GUI.contentColor;
-            GUI.contentColor = labelColor;
 
-            // calculate the position
-            var labelRect = new Rect(rect.x, rect.y - 2, rect.width, rect.height);
+            try
+            {
+                GUI.skin.label.alignment = TextAnchor.UpperCenter;
+                GUI.contentColor = labelColor;
 
-            // draw~
-            EditorGUI.DropShadowLabel(labelRect, label);
-
-            // reset color and alignment
-            GUI.contentColor = c;
-            GUI.skin.label.alignment = align;
+                var labelRect = new Rect(rect.x, rect.y - 2, rect.width, rect.height);
+                EditorGUI.DropShadowLabel(labelRect, label);
+            }
+            finally
+            {
+                GUI.contentColor = c;
+                GUI.skin.label.alignment = align;
+            }
         }
 
         private bool IsNumber(SerializedProperty property)
