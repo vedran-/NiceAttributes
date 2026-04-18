@@ -39,7 +39,7 @@ namespace NiceAttributes.Editor.Rendering
 
                         if (!isHidden)
                         {
-                            Debug.LogError($"Could not find ClassItem for serialized property {property.name} in {ctx._targetObject}!");
+                            Debug.LogWarning($"[NiceAttributes] Could not find ClassItem for serialized property '{property.name}' — this may indicate a missing [Show] attribute or a property from another editor. Target: {ctx._targetObject?.GetType().Name}");
                         }
                     }
                     continue;
