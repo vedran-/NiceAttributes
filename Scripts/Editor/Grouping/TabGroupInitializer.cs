@@ -15,7 +15,7 @@ namespace NiceAttributes.Editor.Grouping
                 var parentGroup = group.GetParentGroup();
                 if (parentGroup == null)
                 {
-                    UnityEngine.Debug.LogError($"TabGroup '{group.groupName}' has no parent!");
+                    UnityEngine.Debug.LogWarning($"[NiceAttributes] TabGroup '{group.groupName}' has no parent — skipping initialization.");
                     continue;
                 }
 
