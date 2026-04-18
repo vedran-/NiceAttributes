@@ -27,11 +27,19 @@ namespace NiceAttributes.Editor.Utility
             EditorGUI.BeginChangeCheck();
             bool enabled = PropertyUtility.IsEnabled(property);
 
-            CurrentTarget = PropertyUtility.GetTargetObjectOfProperty(property);
+            var target = PropertyUtility.GetTargetObjectOfProperty(property);
+            CurrentTarget = target;
 
-            using (new EditorGUI.DisabledScope(disabled: !enabled))
+            try
             {
-                drawProperty(rect, property, PropertyUtility.GetLabel(property));
+                using (new EditorGUI.DisabledScope(disabled: !enabled))
+                {
+                    drawProperty(rect, property, PropertyUtility.GetLabel(property));
+                }
+            }
+            finally
+            {
+                CurrentTarget = null;
             }
 
             if (EditorGUI.EndChangeCheck())
