@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Reflection;
@@ -17,7 +17,8 @@ namespace NiceAttributes.Editor.DecoratorDrawers
         public override float GetHeight()
         {
             float minHeight = EditorGUIUtility.singleLineHeight * 2.0f;
-            float desiredHeight = GUI.skin.box.CalcHeight( GetTextContent(), EditorGUIUtility.currentViewWidth );
+            var (content, hasError) = GetTextContent();
+            float desiredHeight = GUI.skin.box.CalcHeight( content, EditorGUIUtility.currentViewWidth );
             float height = Mathf.Max( minHeight, desiredHeight ) + 10;
             return height;
         }
@@ -28,10 +29,11 @@ namespace NiceAttributes.Editor.DecoratorDrawers
         {
             var indentLength = NiceEditorGUI.GetIndentLength(rect);
             var infoBoxRect = new Rect( rect.x + indentLength, rect.y, rect.width - indentLength, GetHeight() );
+            var (content, hasError) = GetTextContent();
             //var messageType = ConvertInfoBoxType( (attribute as InfoBoxAttribute).Type );
             var messageType = hasError ? MessageType.Error : ConvertInfoBoxType( (attribute as InfoBoxAttribute).Type );
 
-            NiceEditorGUI.HelpBox( infoBoxRect, GetTextContent().text, messageType );
+            NiceEditorGUI.HelpBox( infoBoxRect, content.text, messageType );
         }
         #endregion OnGUI()
 
@@ -50,19 +52,17 @@ namespace NiceAttributes.Editor.DecoratorDrawers
 
 
         #region [Util] GetTextContent()
-        bool hasError = false;
-        bool hasLookupError = false;
-        GUIContent GetTextContent()
+        private (GUIContent content, bool hasError) GetTextContent()
         {
             var infoBoxAttribute = attribute as InfoBoxAttribute;
-            if( infoBoxAttribute == null ) return GUIContent.none;
+            if( infoBoxAttribute == null ) return (GUIContent.none, false);
 
-            hasLookupError = false;
+            bool hasLookupError = false;
             var parseResult = MathematicalParser.Evaluate( infoBoxAttribute.Text, GetVariableValue, GetFunctionValue );
             var text = parseResult.result?.ToString() ?? string.Empty;
-            hasError = hasLookupError || !parseResult.successful;
+            bool hasError = hasLookupError || !parseResult.successful;
 
-            return new GUIContent( text );
+            return (new GUIContent( text ), hasError);
         }
         #endregion GetTextContent()
 
@@ -209,7 +209,6 @@ namespace NiceAttributes.Editor.DecoratorDrawers
 
         private object CreateErrorResult( string message )
         {
-            hasLookupError = true;
             return $"ERROR: {message}";
         }
 
