@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
@@ -46,7 +46,6 @@ namespace NiceAttributes.Editor.Utility
             }
 
             object target = GetTargetObjectWithProperty(property);
-            property.serializedObject.ApplyModifiedProperties(); // We must apply modifications so that the new value is updated in the serialized object
 
             foreach (var onValueChangedAttribute in onValueChangedAttributes)
             {
@@ -66,6 +65,9 @@ namespace NiceAttributes.Editor.Utility
                     Debug.LogWarning(warning, property.serializedObject.targetObject);
                 }
             }
+
+            // Apply modifications after all callbacks have been invoked
+            property.serializedObject.ApplyModifiedProperties();
         }
 
         public static bool IsEnabled(SerializedProperty property)
