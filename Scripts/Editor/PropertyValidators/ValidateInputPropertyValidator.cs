@@ -21,7 +21,20 @@ namespace NiceAttributes.Editor.PropertyValidators
 
                 if (callbackParameters.Length == 0)
                 {
-                    if (!(bool)validationCallback.Invoke(target, null))
+                    bool callbackResult;
+                    try
+                    {
+                        callbackResult = (bool)validationCallback.Invoke(target, null);
+                    }
+                    catch (TargetInvocationException ex)
+                    {
+                        NiceEditorGUI.HelpBox_Layout(
+                            $"Validation callback threw an exception: {ex.InnerException?.Message ?? "unknown"}",
+                            MessageType.Error,
+                            context: property.serializedObject.targetObject);
+                        return;
+                    }
+                    if (!callbackResult)
                     {
                         if (string.IsNullOrEmpty(validateInputAttribute.Message))
                         {
@@ -43,7 +56,20 @@ namespace NiceAttributes.Editor.PropertyValidators
 
                     if (fieldType == parameterType)
                     {
-                        if (!(bool)validationCallback.Invoke(target, new object[] { fieldInfo.GetValue(target) }))
+                        bool callbackResult;
+                        try
+                        {
+                            callbackResult = (bool)validationCallback.Invoke(target, new object[] { fieldInfo.GetValue(target) });
+                        }
+                        catch (TargetInvocationException ex)
+                        {
+                            NiceEditorGUI.HelpBox_Layout(
+                                $"Validation callback threw an exception: {ex.InnerException?.Message ?? "unknown"}",
+                                MessageType.Error,
+                                context: property.serializedObject.targetObject);
+                            return;
+                        }
+                        if (!callbackResult)
                         {
                             if (string.IsNullOrEmpty(validateInputAttribute.Message))
                             {
