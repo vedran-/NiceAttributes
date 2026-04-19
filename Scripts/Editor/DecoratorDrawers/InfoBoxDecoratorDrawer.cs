@@ -16,10 +16,10 @@ namespace NiceAttributes.Editor.DecoratorDrawers
         #region GetHeight()
         public override float GetHeight()
         {
-            float minHeight = EditorGUIUtility.singleLineHeight * 2.0f;
+            float minHeight = EditorGUIUtility.singleLineHeight * GUIConstants.InfoBoxHeightMultiplier;
             var (content, hasError) = GetTextContent();
             float desiredHeight = GUI.skin.box.CalcHeight( content, EditorGUIUtility.currentViewWidth );
-            float height = Mathf.Max( minHeight, desiredHeight ) + 10;
+            float height = Mathf.Max( minHeight, desiredHeight ) + GUIConstants.InfoBoxExtraHeight;
             return height;
         }
         #endregion GetHeight()

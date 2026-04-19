@@ -118,7 +118,7 @@ namespace NiceAttributes.Editor.PropertyDrawers
                 GUI.skin.label.alignment = TextAnchor.UpperCenter;
                 GUI.contentColor = labelColor;
 
-                var labelRect = new Rect(rect.x, rect.y - 2, rect.width, rect.height);
+                var labelRect = new Rect(rect.x, rect.y - GUIConstants.ProgressBarLabelVerticalOffset, rect.width, rect.height);
                 EditorGUI.DropShadowLabel(labelRect, label);
             }
             finally

@@ -26,7 +26,7 @@ namespace NiceAttributes.Editor.PropertyDrawers
                 float labelWidth = EditorGUIUtility.labelWidth + NiceEditorGUI.HorizontalSpacing;
                 float floatFieldWidth = EditorGUIUtility.fieldWidth;
                 float sliderWidth = rect.width - labelWidth - 2.0f * floatFieldWidth;
-                float sliderPadding = 5.0f;
+                float sliderPadding = GUIConstants.SliderPadding;
 
                 Rect labelRect = new Rect(
                     rect.x,

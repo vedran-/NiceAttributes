@@ -67,16 +67,16 @@ namespace NiceAttributes.Editor.PropertyDrawers_SpecialCase
                         drawElementCallback = (Rect r, int index, bool isActive, bool isFocused) =>
                         {
                             SerializedProperty element = property.GetArrayElementAtIndex(index);
-                            r.y += 1.0f;
-                            r.x += 10.0f;
-                            r.width -= 10.0f;
+                            r.y += GUIConstants.ListElementTopIndent;
+                            r.x += GUIConstants.ListElementLeftIndent;
+                            r.width -= GUIConstants.ListElementLeftIndent;
 
                             EditorGUI.PropertyField(new Rect(r.x, r.y, r.width, EditorGUIUtility.singleLineHeight), element, true);
                         },
 
                         elementHeightCallback = (int index) =>
                         {
-                            return EditorGUI.GetPropertyHeight(property.GetArrayElementAtIndex(index)) + 4.0f;
+                            return EditorGUI.GetPropertyHeight(property.GetArrayElementAtIndex(index)) + GUIConstants.ListElementExtraHeight;
                         }
                     };
 

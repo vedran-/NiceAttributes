@@ -14,12 +14,12 @@ namespace NiceAttributes.Editor.Utility
                 richText = true,
                 wordWrap = true,
                 alignment = textAlignment,
-                padding = new RectOffset(4, 4, 10, 10)
+                padding = new RectOffset(GUIConstants.HelpBoxTextPadding, GUIConstants.HelpBoxTextPadding, GUIConstants.HelpBoxTextPaddingTopBottom, GUIConstants.HelpBoxTextPaddingTopBottom)
             };
             if (_helpBoxStyle == null) _helpBoxStyle = new GUIStyle(GUI.skin.window)
             {
-                padding = new RectOffset(1, 1, 1, 1),
-                margin = new RectOffset(4, 4, 4, 4)
+                padding = new RectOffset(GUIConstants.HelpBoxStylePadding, GUIConstants.HelpBoxStylePadding, GUIConstants.HelpBoxStylePadding, GUIConstants.HelpBoxStylePadding),
+                margin = new RectOffset(GUIConstants.HelpBoxStyleMargin, GUIConstants.HelpBoxStyleMargin, GUIConstants.HelpBoxStyleMargin, GUIConstants.HelpBoxStyleMargin)
             };
         }
 
@@ -30,7 +30,7 @@ namespace NiceAttributes.Editor.Utility
 
             GUI.BeginGroup(rect, _helpBoxStyle);
 
-            Rect iconRect = new Rect(10, rect.height / 2 - 18, 36, 36);
+            Rect iconRect = new Rect(GUIConstants.HelpBoxIconMarginLeft, rect.height / 2 - GUIConstants.HelpBoxIconVerticalOffset, GUIConstants.HelpBoxIconSize, GUIConstants.HelpBoxIconSize);
             GUIContent iconContent = null;
             switch (messageType)
             {
@@ -40,7 +40,7 @@ namespace NiceAttributes.Editor.Utility
             }
             if (iconContent != null) GUI.Label(iconRect, iconContent);
 
-            Rect textRect = new Rect(46, 0, rect.width - 46, rect.height);
+            Rect textRect = new Rect(GUIConstants.HelpBoxTextOffset, 0, rect.width - GUIConstants.HelpBoxTextOffset, rect.height);
             GUI.Label(textRect, new GUIContent(message), _helpBoxTextStyle);
             GUI.EndGroup();
 
