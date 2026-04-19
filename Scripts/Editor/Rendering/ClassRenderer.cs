@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Reflection;
+using NiceAttributes.Editor.GroupRenderer;
 using NiceAttributes.Editor.PropertyDrawers;
 using NiceAttributes.Editor.Utility;
 using UnityEditor;
@@ -66,7 +67,7 @@ namespace NiceAttributes.Editor.Rendering
                             }
                             else
                             {
-                                lastOpenGroups[i].groupAttribute?.FinishDrawingGroup();
+                                GroupRendererFactory.End(lastOpenGroups[i].groupAttribute, targetForGroups);
                             }
                         }
                     }
@@ -82,7 +83,7 @@ namespace NiceAttributes.Editor.Rendering
 
                         if (shouldOpen && newOpenedGroups[i].groupAttribute != null)
                         {
-                            var shouldDraw = newOpenedGroups[i].groupAttribute.StartDrawingGroup(targetForGroups);
+                            var shouldDraw = GroupRendererFactory.Start(newOpenedGroups[i].groupAttribute, targetForGroups);
                             if (!shouldDraw)
                             {
                                 hiddenGroups.Add(newOpenedGroups[i]);

@@ -104,7 +104,10 @@ private PrivateNonSerialized b; // Not shown in inspector - field is private, so
  - InfoBox, Header, on fields inside groups (TabGroup etc.) does not work properly yet.
  - Improve TabGroup / BoxGroup / FoldoutGroup appearance and colors.
 
-## What's New (v0.10.0)
+## What's New (v0.2.0)
+
+### Architecture
+- **Core↔Editor separation** — All Editor-only rendering code extracted from Core group attributes into Editor/GroupRenderer/ with a factory pattern. Core now has zero UnityEditor/UnityEngine references (enforced by asmdef boundaries)
 
 ### Bug Fixes
 - **InfoBox dynamic text now works** — formulas like `[InfoBox("'{myField}'")]` now resolve actual field/property/method values instead of throwing exceptions

@@ -1,4 +1,3 @@
-#if UNITY_EDITOR
 using System;
 using System.Text.RegularExpressions;
 using UnityEngine;
@@ -198,4 +197,3 @@ namespace NiceAttributes
         }
     }
 }
-#endif

@@ -1,7 +1,6 @@
-﻿using System;
+using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using UnityEngine;
 
 namespace NiceAttributes
 {
@@ -14,32 +13,5 @@ namespace NiceAttributes
         {
             ShowTitle = showTitle;
         }
-
-#if UNITY_EDITOR
-        private Rect _drawRect;
-
-        private protected override bool OnGUI_GroupStart()
-        {
-            _drawRect = UnityEditor.EditorGUILayout.BeginVertical( GUI.skin.box );
-
-            // Fill the background, if set
-            if( GroupBackColor.HasValue() ) GUIUtil.FillRect( _drawRect, GroupBackColor.ToColor() );
-
-
-            // Show the label
-            var label = GetLabel();
-            if( !string.IsNullOrEmpty( label ) ) GUIUtil.DrawHeader( label, groupAttr: this );
-
-            return true;
-        }
-
-        private protected override void OnGUI_GroupEnd()
-        {
-            UnityEditor.EditorGUILayout.EndVertical();
-
-            // Draw bounding rect
-            GUIUtil.DrawRect( _drawRect, Color.black );
-        }
-#endif
     }
 }

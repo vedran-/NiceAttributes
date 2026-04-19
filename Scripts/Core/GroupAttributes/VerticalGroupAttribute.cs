@@ -1,7 +1,6 @@
 using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
-using UnityEditor;
 
 namespace NiceAttributes
 {
@@ -11,24 +10,5 @@ namespace NiceAttributes
     {
         public VerticalGroupAttribute( string groupName = "", [CallerLineNumber] int lineNumber = 0 ) 
             : base( groupName, lineNumber ) {}
-
-#if UNITY_EDITOR
-        private protected override bool OnGUI_GroupStart()
-        {
-            var rect = EditorGUILayout.BeginVertical();
-
-            // Fill the background, if set
-            if( GroupBackColor.HasValue() ) GUIUtil.FillRect( rect, GroupBackColor.ToColor() );
-
-            var label = GetLabel();
-            if( !string.IsNullOrEmpty( label ) ) GUIUtil.DrawHeader( label, groupAttr: this );
-            return true;
-        }
-
-        private protected override void OnGUI_GroupEnd()
-        {
-            EditorGUILayout.EndVertical();
-        }
-#endif
     }
 }

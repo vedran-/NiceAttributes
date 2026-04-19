@@ -12,10 +12,8 @@ namespace NiceAttributes
         private static readonly Stack<Color> _contentColorStack = new Stack<Color>();
         private static readonly Stack<Color> _colorStack = new Stack<Color>();
         
-#if UNITY_EDITOR
         public static Color GetDefaultBackgroundColor() => UnityEditor.EditorGUIUtility.isProSkin ? _bgProSkin : _bgFreeSkin;
         //public static Color EditorBackgroundColor = GUI.skin.window.normal.background.GetPixel( 0, 0 );
-#endif
 
         public static void PushBackgroundColor( Color color )
         {

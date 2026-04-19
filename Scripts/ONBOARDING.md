@@ -13,7 +13,7 @@ NiceAttributes is a **Unity editor extension** that replaces the default Inspect
 - Nested groups with lazy definition (`[BoxGroup("X/Y")]` before `[HorizontalGroup("X")]`)
 - Generic `[Group]` placeholder — change group type by modifying a single attribute
 
-**Version:** 0.10.0
+**Version:** 0.2.0
 
 ---
 
@@ -51,8 +51,8 @@ Scripts/
 │   │   ├── ButtonAttribute.cs         # → handled by ButtonRenderer
 │   │   └── ReorderableListAttribute.cs → ReorderableListPropertyDrawer
 │   │
-│   ├── GroupAttributes/               # Grouping attributes
-│   │   ├── BaseGroupAttribute.cs      # Abstract base — has OnGUI_GroupStart/End
+│   ├── GroupAttributes/               # Grouping attributes (data-only, no Editor code)
+│   │   ├── BaseGroupAttribute.cs      # Abstract base — data properties only
 │   │   ├── BoxGroupAttribute.cs
 │   │   ├── TabGroupAttribute.cs       # Has special TabParent nested class
 │   │   ├── HorizontalGroupAttribute.cs
@@ -85,16 +85,20 @@ Scripts/
 │   │   ├── EConditionOperator.cs      # And / Or
 │   │   └── NiceColor.cs               # RGBA as uint enum (0xRRGGBBAA)
 │   │
-│   ├── Utility/
-│   │   ├── GUIUtil.cs                 # Drawing primitives (partial class)
-│   │   ├── GUIUtil_Color.cs           # Color push/pop stack (partial class)
-│   │   ├── GUIStyles.cs               # Cached GUIStyles (lazy-loaded, FindAssets cached)
-│   │   ├── NiceColorExtensions.cs     # NiceColor → Color conversion
-│   │   └── Util.cs                    # Color/Rect extension methods
-│   │
-│   └── GlobalConfig.cs                # Enable/disable toggle (persisted via EditorPrefs)
+│   └── Utility/
+│       └── Util.cs                    # Color/Rect extension methods
 │
 ├── Editor/                            # ← Editor assembly (UnityEditor only)
+│   ├── GlobalConfig.cs                # Enable/disable toggle (persisted via EditorPrefs)
+│   ├── GroupRenderer/                 # Group rendering (extracted from Core group attributes)
+│   │   ├── BaseGroupRenderer.cs       # Abstract base — Start/End with label/field width management
+│   │   ├── BoxGroupRenderer.cs        # Box group rendering
+│   │   ├── FoldoutGroupRenderer.cs    # Foldout group rendering
+│   │   ├── GroupGroupRenderer.cs      # Generic [Group] placeholder (no-op pass-through)
+│   │   ├── GroupRendererFactory.cs    # Static factory with renderer stack for Start/End pairing
+│   │   ├── HorizontalGroupRenderer.cs # Horizontal group rendering
+│   │   ├── TabGroupRenderer.cs        # Tab group rendering
+│   │   └── VerticalGroupRenderer.cs   # Vertical group rendering
 │   ├── NiceInspector.cs               # Entry: CustomEditor for all UnityEngine.Object
 │   ├── NiceEditorWindow.cs            # Entry: Base class for custom editor windows
 │   ├── ClassContext.cs                # Thin facade (71 lines) — coordinates extracted components
@@ -143,6 +147,10 @@ Scripts/
 │   │   └── ValidatorAttributeExtensions.cs  # Maps attr → validator
 │   │
 │   └── Utility/
+│       ├── GUIUtil.cs                 # Drawing primitives (partial class)
+│       ├── GUIUtil_Color.cs           # Color push/pop stack (partial class)
+│       ├── GUIStyles.cs               # Cached GUIStyles (lazy-loaded, FindAssets cached)
+│       ├── NiceColorExtensions.cs     # NiceColor → Color conversion
 │       ├── NiceEditorGUI.cs           # Thin facade (48 lines) — delegates to renderers
 │       ├── PropertyDrawPipeline.cs    # Shared rendering pipeline (visible → validate → enabled → draw → OnValueChanged)
 │       ├── ConditionalEvaluator.cs    # Shared conditional evaluation for ShowIf/EnableIf
@@ -207,10 +215,10 @@ After context creation, `SerializedPropertyConnector.Connect()` bridges reflecti
 
 1. `ClassContext.Draw()` delegates to `ClassRenderer.Render()`
 2. **Group Management** (`SetActiveGroups`):
-   - Compares current item's group path with previous item's
-   - Opens new groups (calls `BaseGroupAttribute.StartDrawingGroup()`)
-   - Closes old groups (calls `BaseGroupAttribute.FinishDrawingGroup()`)
-   - Handles collapsed foldouts — skips rendering contents
+    - Compares current item's group path with previous item's
+    - Opens new groups (calls `GroupRendererFactory.Start(attr, target)`)
+    - Closes old groups (calls `GroupRendererFactory.End(attr, target)`)
+    - Handles collapsed foldouts — skips rendering contents
 3. **Per-Item Rendering** (`DrawItem`):
    - **Expanded class/struct:** Draw foldout, recursively call `childContext.Draw()`
    - **Serialized property:** `PropertyFieldRenderer.PropertyField_Layout()`
@@ -370,6 +378,7 @@ The conditional evaluation logic (enum comparison, boolean condition resolution,
 - ~~Debug artifacts (HELLOOO label, hardcoded stubs)~~ — **FIXED** — all removed
 - ~~Redundant math parser (FormulaParser)~~ — **FIXED** — consolidated to MathematicalParser only
 - ~~No automated tests~~ — **FIXED** — NUnit test suite with MathematicalParserTests
+- ~~Editor rendering code in Core attributes~~ — **FIXED** — extracted to Editor/GroupRenderer/ with factory pattern
 
 ---
 
@@ -422,6 +431,8 @@ The conditional evaluation logic (enum comparison, boolean condition resolution,
 | **MemberOrderer** | Extracted component for line-number-based member ordering (pure function) |
 | **GroupResolver** | Extracted component for group tree building and member-to-group assignment (pure function) |
 | **ClassRenderer** | Extracted component for the rendering loop and group state management |
+| **GroupRenderer** | Abstract base for group rendering in Editor — handles Start/End lifecycle |
+| **GroupRendererFactory** | Static factory that manages a stack of GroupRenderer instances for Start/End pairing |
 
 ---
 
