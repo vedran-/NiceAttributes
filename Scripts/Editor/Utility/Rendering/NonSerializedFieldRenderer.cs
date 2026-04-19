@@ -199,15 +199,20 @@ namespace NiceAttributes.Editor.Utility
             }
             if (!folded) return (true, value);
 
+            ICollection modifiedCollection = null;
+
             for (int i = 0; i < length; i++)
             {
-                var item = array != null ? array.GetValue(i) : genericCollection.Cast<object>().ElementAt(i);
+                var item = array != null ? array.GetValue(i) : (modifiedCollection ?? genericCollection).Cast<object>().ElementAt(i);
 
                 if (Field_Layout(item, elementType, new GUIContent($"Element {i}"), false, out var outValue))
                 {
                     if (outValue == value) continue;
 
-                    if (array != null) array.SetValue(outValue, i);
+                    if (array != null)
+                    {
+                        array.SetValue(outValue, i);
+                    }
                     else if (genericCollection != null)
                     {
                         if (genericCollection is IList list)
@@ -216,21 +221,37 @@ namespace NiceAttributes.Editor.Utility
                         }
                         else
                         {
-                            var tempCollection = Activator.CreateInstance(valueType, true);
-                            var addMethod = valueType.GetMethod("Add");
-                            var count = 0;
-                            foreach (var element in genericCollection)
+                            if (modifiedCollection == null)
                             {
-                                addMethod.Invoke(tempCollection, new[] { count == i ? outValue : element });
-                                count++;
+                                var tempCollection = Activator.CreateInstance(valueType, true);
+                                var addMethod = valueType.GetMethod("Add");
+                                var count = 0;
+                                foreach (var element in genericCollection)
+                                {
+                                    addMethod.Invoke(tempCollection, new[] { count == i ? outValue : element });
+                                    count++;
+                                }
+                                modifiedCollection = tempCollection as ICollection;
                             }
-                            genericCollection = tempCollection as ICollection;
+                            else
+                            {
+                                var rebuildType = modifiedCollection.GetType();
+                                var rebuildAdd = rebuildType.GetMethod("Add");
+                                var rebuildList = modifiedCollection.Cast<object>().ToList();
+                                rebuildList[i] = outValue;
+                                var rebuildTemp = Activator.CreateInstance(rebuildType, true);
+                                foreach (var elem in rebuildList)
+                                {
+                                    rebuildAdd.Invoke(rebuildTemp, new[] { elem });
+                                }
+                                modifiedCollection = rebuildTemp as ICollection;
+                            }
                         }
                     }
                 }
             }
 
-            return (true, value);
+            return (true, modifiedCollection ?? value);
         }
     }
 }
