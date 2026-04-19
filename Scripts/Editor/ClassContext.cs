@@ -76,9 +76,11 @@ namespace NiceAttributes.Editor
         }
 
         
-        internal void Draw()
+        internal void Draw(object targetForGroups = null)
         {
-            var renderer = new ClassRenderer(_displayedMembers, _targetObject, _indentLevel);
+            // Use provided target (for nested contexts), or fall back to own target
+            var effectiveTarget = targetForGroups ?? _targetObject;
+            var renderer = new ClassRenderer(_displayedMembers, _targetObject, _indentLevel, effectiveTarget);
             renderer.Render();
         }
     }

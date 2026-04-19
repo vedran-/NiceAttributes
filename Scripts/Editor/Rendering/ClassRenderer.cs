@@ -12,13 +12,15 @@ namespace NiceAttributes.Editor.Rendering
         private readonly List<ClassContext.ClassItem> _displayedMembers;
         private readonly object _targetObject;
         private readonly int _indentLevel;
+        private readonly object _targetForGroups;
         private static readonly Color BgNonSerialized = Color.Lerp(GUIUtil.GetDefaultBackgroundColor(), new Color32(127, 0, 0, 255), 0.15f);
 
-        public ClassRenderer(List<ClassContext.ClassItem> displayedMembers, object targetObject, int indentLevel)
+        public ClassRenderer(List<ClassContext.ClassItem> displayedMembers, object targetObject, int indentLevel, object targetForGroups = null)
         {
             _displayedMembers = displayedMembers;
             _targetObject = targetObject;
             _indentLevel = indentLevel;
+            _targetForGroups = targetForGroups;
         }
 
         public void Render()
@@ -29,7 +31,7 @@ namespace NiceAttributes.Editor.Rendering
             ClassContext.GroupInfo[] lastOpenGroups = null;
             var hiddenGroups = new List<ClassContext.GroupInfo>();
 
-            bool SetActiveGroups(ClassContext.GroupInfo[] newOpenedGroups)
+            bool SetActiveGroups(ClassContext.GroupInfo[] newOpenedGroups, object targetForGroups)
             {
                 if (newOpenedGroups != null) foreach (var g in newOpenedGroups)
                 {
@@ -80,7 +82,7 @@ namespace NiceAttributes.Editor.Rendering
 
                         if (shouldOpen && newOpenedGroups[i].groupAttribute != null)
                         {
-                            var shouldDraw = newOpenedGroups[i].groupAttribute.StartDrawingGroup();
+                            var shouldDraw = newOpenedGroups[i].groupAttribute.StartDrawingGroup(targetForGroups);
                             if (!shouldDraw)
                             {
                                 hiddenGroups.Add(newOpenedGroups[i]);
@@ -97,12 +99,12 @@ namespace NiceAttributes.Editor.Rendering
 
             foreach (var item in _displayedMembers)
             {
-                var shouldDraw = SetActiveGroups(item.group?.groups);
+                var shouldDraw = SetActiveGroups(item.group?.groups, _targetForGroups);
                 if (!shouldDraw) continue;
                 DrawItem(item);
             }
 
-            SetActiveGroups(null);
+            SetActiveGroups(null, _targetForGroups);
             EditorGUI.indentLevel = oldIndent;
         }
 
@@ -163,7 +165,7 @@ namespace NiceAttributes.Editor.Rendering
 
                 if (item.foldedOut)
                 {
-                    item.classContext.Draw();
+                    item.classContext.Draw(item.serializedProperty?.serializedObject?.targetObject);
                 }
             }
             else if (item.serializedProperty != null)

@@ -1,4 +1,4 @@
-﻿using NiceAttributes.Model;
+using NiceAttributes.Model;
 using UnityEditor;
 
 namespace NiceAttributes
@@ -38,16 +38,17 @@ namespace NiceAttributes
 
 
         #region [API] StartDrawingGroup()
-        public bool StartDrawingGroup()
+        public bool StartDrawingGroup(object target = null)
         {
+            if (target != null) PropertyDrawPipeline.SetTarget(target);
             SetLabelAndFieldWidth();
-            
+
             return OnGUI_GroupStart();
         }
         #endregion [API] StartDrawingGroup()
 
         #region [API] FinishDrawingGroup()
-        public void FinishDrawingGroup()
+        public void FinishDrawingGroup(object target = null)
         {
             OnGUI_GroupEnd();
             RestoreLabelAndFieldWidth();
