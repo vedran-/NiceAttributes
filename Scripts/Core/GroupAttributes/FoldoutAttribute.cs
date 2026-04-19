@@ -1,8 +1,4 @@
-#if UNITY_EDITOR
-using NiceAttributes.Editor.Utility;
-#endif
-
-using System;
+﻿using System;
 using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using UnityEditor;
@@ -13,33 +9,40 @@ namespace NiceAttributes
     [Conditional("UNITY_EDITOR")]
     public class FoldoutAttribute : BaseGroupAttribute
     {
-        private const string _prefsPrefix = "NiceAttributes_Foldout_";
+#if UNITY_EDITOR
+        private bool _foldedOut = true;
+#endif
+
+        //var id = $"{this.target.GetInstanceID()}.{Name}";    // TODO
+        string id => GroupName;
 
         public FoldoutAttribute(string groupName = "", [CallerLineNumber] int lineNumber = 0)
             : base(groupName, lineNumber)
         {
+#if UNITY_EDITOR
+            _foldedOut = EditorPrefs.GetBool(id, true);
+#endif
         }
 
 #if UNITY_EDITOR
-        private string GetFoldoutKey()
-        {
-            var targetId = PropertyDrawPipeline.CurrentTarget?.GetInstanceID() ?? 0;
-            return _prefsPrefix + targetId + "_" + GroupName;
-        }
-
         private protected override bool OnGUI_GroupStart()
         {
             var rect = EditorGUILayout.BeginVertical();
+
+            // Fill the background, if set
             if (GroupBackColor.HasValue()) GUIUtil.FillRect(rect, GroupBackColor.ToColor());
+
             var label = Title ?? GroupName;
-            var key = GetFoldoutKey();
-            var folded = EditorPrefs.GetBool(key, true);
-            var foldedOut = EditorGUILayout.Foldout(folded, GetLabel(), true);
-            if (foldedOut != folded)
+            var folded = EditorGUILayout.Foldout(_foldedOut, GetLabel(), true);
+            if (folded != _foldedOut)
             {
-                EditorPrefs.SetBool(key, foldedOut);
+                // Value changed
+                _foldedOut = folded;
+                EditorPrefs.SetBool(id, folded);
             }
-            return foldedOut;
+
+            // Return true to draw elements of the group, or false not to draw them
+            return _foldedOut;
         }
 
         private protected override void OnGUI_GroupEnd()
