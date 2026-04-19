@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using NiceAttributes.Editor.Utility;
 using UnityEditor;
 using UnityEditorInternal;
@@ -188,6 +188,7 @@ namespace NiceAttributes.Editor.PropertyDrawers_SpecialCase
 
                         if (didAcceptDrag)
                         {
+                            list.serializedProperty.serializedObject.ApplyModifiedProperties();
                             GUI.changed = true;
                             DragAndDrop.AcceptDrag();
                             usedEvent = true;
