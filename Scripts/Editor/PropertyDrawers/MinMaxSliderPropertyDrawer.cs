@@ -1,4 +1,4 @@
-﻿using NiceAttributes.Editor.Utility;
+using NiceAttributes.Editor.Utility;
 using UnityEditor;
 using UnityEngine;
 
@@ -22,8 +22,6 @@ namespace NiceAttributes.Editor.PropertyDrawers
 
             if (property.propertyType == SerializedPropertyType.Vector2 || property.propertyType == SerializedPropertyType.Vector2Int)
             {
-                EditorGUI.BeginProperty(rect, label, property);
-
                 float indentLength = NiceEditorGUI.GetIndentLength(rect);
                 float labelWidth = EditorGUIUtility.labelWidth + NiceEditorGUI.HorizontalSpacing;
                 float floatFieldWidth = EditorGUIUtility.fieldWidth;
@@ -94,8 +92,6 @@ namespace NiceAttributes.Editor.PropertyDrawers
                         property.vector2IntValue = sliderValue;
                     }
                 }
-
-                EditorGUI.EndProperty();
             }
             else
             {
