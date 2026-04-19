@@ -101,11 +101,15 @@ namespace NiceAttributes.Editor.Discovery
                                 var obj = propInfo != null ? propInfo.GetValue(_targetObject, null)
                                     : fieldInfo != null ? fieldInfo.GetValue(_targetObject)
                                     : null;
-                                Debug.Assert(obj != null, $"Object for member {m.Name} is null! Parent object was {_targetObject}");
-
-                                _createChildContext(memberType, obj, _indentLevel + 1);
-
-                                if (HasNiceAttributes) HasNiceAttributes = true;
+                                if (obj == null)
+                                {
+                                    Debug.LogWarning($"Object for member {m.Name} is null. Parent object was {_targetObject}");
+                                }
+                                else
+                                {
+                                    _createChildContext(memberType, obj, _indentLevel + 1);
+                                    if (HasNiceAttributes) HasNiceAttributes = true;
+                                }
                             }
                         }
                     }
