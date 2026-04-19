@@ -19,7 +19,12 @@ namespace NiceAttributes.Editor.Utility
 
             if (methodInfo.GetParameters().All(p => p.IsOptional))
             {
-                var buttonAttribute = (ButtonAttribute)methodInfo.GetCustomAttributes(typeof(ButtonAttribute), true)[0];
+                var buttonAttribute = methodInfo.GetCustomAttributes(typeof(ButtonAttribute), true).Cast<ButtonAttribute>().FirstOrDefault();
+                if (buttonAttribute == null)
+                {
+                    Debug.LogWarning($"No ButtonAttribute found on method {methodInfo.Name}");
+                    return;
+                }
                 var buttonText = string.IsNullOrEmpty(buttonAttribute.Text) ? ObjectNames.NicifyVariableName(methodInfo.Name) : buttonAttribute.Text;
                 var buttonEnabled = ButtonUtility.IsEnabled(target, methodInfo);
 
